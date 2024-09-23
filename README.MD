@@ -40,6 +40,7 @@ Refine's hooks and components simplifies the development process and eliminates 
 To learn more about **Refine**, please check out the [Documentation](https://refine.dev/docs)
 
 - **Supabase Data Provider** [Docs](https://refine.dev/docs/core/providers/data-provider/#overview)
+- **Tailwind CSS** [Docs](https://refine.dev/docs/guides-concepts/general-concepts/#headless-concept)
 - **React Router** [Docs](https://refine.dev/docs/core/providers/router-provider/)
 
 ## License

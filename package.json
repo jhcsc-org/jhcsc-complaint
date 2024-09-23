@@ -28,7 +28,10 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.3.4",
     "typescript": "^5.4.2",
-    "vite": "^4.3.1"
+    "vite": "^4.3.1",
+    "tailwindcss": "^3.4.3",
+    "postcss": "^8.4.38",
+    "autoprefixer": "^10.4.19"
   },
   "scripts": {
     "dev": "refine dev",
@@ -49,6 +52,6 @@
     ]
   },
   "refine": {
-    "projectId": "pON7Zt-LGDMVv-hwanyq"
+    "projectId": "ySPYms-OjD2aW-smWOMJ"
   }
 }
