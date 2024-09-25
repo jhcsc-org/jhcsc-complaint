@@ -1,23 +1,23 @@
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  LoginFormTypes,
-  LoginPageProps,
-  useActiveAuthProvider,
-  useLink,
-  useLogin,
-  useRouterContext,
-  useRouterType,
-  useTranslate,
+	LoginFormTypes,
+	LoginPageProps,
+	useActiveAuthProvider,
+	useLink,
+	useLogin,
+	useRouterContext,
+	useRouterType,
+	useTranslate,
 } from "@refinedev/core";
 import React, { useState } from "react";
 
@@ -194,16 +194,21 @@ export const LoginPage: React.FC<LoginProps> = ({
 						{translate("pages.login.signin", "Sign in")}
 					</Button>
 				</CardFooter>
-			</Card>
-			{registerLink !== false && hideForm && (
-				<div style={{ textAlign: "center" }}>
-					{translate("pages.login.buttons.noAccount", "Don’t have an account?")}{" "}
-					{renderLink(
-						"/register",
-						translate("pages.login.register", "Sign up"),
+				<div className="p-2 text-base">
+					{registerLink ?? (
+						<div style={{ textAlign: "center" }}>
+							{translate(
+								"pages.login.buttons.noAccount",
+								"Don’t have an account?",
+							)}{" "}
+							{renderLink(
+								"/register",
+								translate("pages.login.register", "Sign up"),
+							)}
+						</div>
 					)}
 				</div>
-			)}
+			</Card>
 		</div>
 	);
 
