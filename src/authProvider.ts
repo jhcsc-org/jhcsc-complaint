@@ -60,11 +60,33 @@ const authProvider: AuthBindings = {
       },
     };
   },
-  register: async ({ email, password }) => {
+  register: async ({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+        purok,
+        street,
+        block_number: blockNumber,
+        house_number: houseNumber,
+      },
+    },
+  }) => {
+    console.log("HELLO WORLD!")
     try {
       const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: fullName,
+            purok: purok,
+            street,
+            block_number: blockNumber,
+            house_number: houseNumber,
+          },
+        },
       });
 
       if (error) {
