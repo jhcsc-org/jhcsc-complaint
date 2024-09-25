@@ -1,17 +1,17 @@
 import {
-  Authenticated,
-  ErrorComponent,
-  Refine
+    Authenticated,
+    ErrorComponent,
+    Refine
 } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
 import { HeadlessInferencer } from "@refinedev/inferencer/headless";
 import routerBindings, {
-  CatchAllNavigate,
-  DocumentTitleHandler,
-  NavigateToResource,
-  UnsavedChangesNotifier,
+    CatchAllNavigate,
+    DocumentTitleHandler,
+    NavigateToResource,
+    UnsavedChangesNotifier,
 } from "@refinedev/react-router-v6";
 import { dataProvider, liveProvider } from "@refinedev/supabase";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
@@ -205,18 +205,6 @@ function App() {
 											type="login"
 											renderContent={(content) => (
 												<div>
-													<p
-														style={{
-															padding: 10,
-															color: "#004085",
-															backgroundColor: "#cce5ff",
-															borderColor: "#b8daff",
-															textAlign: "center",
-														}}
-													>
-														email: info@refine.dev
-														<br /> password: refine-supabase
-													</p>
 													{content}
 												</div>
 											)}

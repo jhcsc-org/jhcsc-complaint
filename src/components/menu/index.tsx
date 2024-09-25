@@ -1,5 +1,6 @@
 import { useLogout, useMenu } from "@refinedev/core";
 import { NavLink } from "react-router-dom";
+import { Button } from "../ui/button";
 
 export const Menu = () => {
   const { mutate: logout } = useLogout();
@@ -7,14 +8,14 @@ export const Menu = () => {
 
   return (
     <nav className="menu">
-      <ul>
+      <ul className="flex flex-col gap-2">
         {menuItems.map((item) => (
-          <li key={item.key}>
+          <div key={item.key}>
             <NavLink to={item.route ?? "/"}>{item.label}</NavLink>
-          </li>
+          </div>
         ))}
       </ul>
-      <button onClick={() => logout()}>Logout</button>
+      <Button onClick={() => logout()}>Logout</Button>
     </nav>
   );
 };
