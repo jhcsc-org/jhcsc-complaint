@@ -1,5 +1,5 @@
 import { HeadlessInferencer } from "@refinedev/inferencer/headless";
 
-export const CitizensShow = () => {
-    return <HeadlessInferencer />;
+export const CitizenList = () => {
+	return <HeadlessInferencer />;
 };

@@ -81,11 +81,12 @@
   }
 
   .menu {
-    @apply flex-shrink-0 p-2 pr-4 border-r border-gray-300;
+    @apply flex-shrink-0 p-2 pr-4 border-r border-gray-300
+
   }
 
   .menu a {
-    @apply text-black;
+    @apply text-black no-underline;
   }
 
   .menu .active {

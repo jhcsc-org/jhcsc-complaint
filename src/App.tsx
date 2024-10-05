@@ -1,17 +1,17 @@
 import {
-    Authenticated,
-    ErrorComponent,
-    Refine
+	Authenticated,
+	ErrorComponent,
+	Refine
 } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
 import { HeadlessInferencer } from "@refinedev/inferencer/headless";
 import routerBindings, {
-    CatchAllNavigate,
-    DocumentTitleHandler,
-    NavigateToResource,
-    UnsavedChangesNotifier,
+	CatchAllNavigate,
+	DocumentTitleHandler,
+	NavigateToResource,
+	UnsavedChangesNotifier,
 } from "@refinedev/react-router-v6";
 import { dataProvider, liveProvider } from "@refinedev/supabase";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
@@ -19,6 +19,8 @@ import "./App.css";
 import authProvider from "./authProvider";
 import { Layout } from "./components/layout";
 import { AuthPage } from "./components/pages/auth";
+import { CitizenProfileList } from "./pages/citizen_profiles";
+import { CitizenList } from "./pages/citizens";
 import { supabaseClient } from "./utility";
 
 function App() {
@@ -139,13 +141,13 @@ function App() {
 									<Route path="show/:id" element={<HeadlessInferencer />} />
 								</Route>
 								<Route path="/citizens">
-									<Route index element={<HeadlessInferencer />} />
+									<Route index element={<CitizenList/>} />
 									<Route path="create" element={<HeadlessInferencer />} />
 									<Route path="edit/:id" element={<HeadlessInferencer />} />
 									<Route path="show/:id" element={<HeadlessInferencer />} />
 								</Route>
 								<Route path="/citizen_profiles">
-									<Route index element={<HeadlessInferencer />} />
+									<Route index element={<CitizenProfileList />} />
 									<Route path="create" element={<HeadlessInferencer />} />
 									<Route path="edit/:id" element={<HeadlessInferencer />} />
 									<Route path="show/:id" element={<HeadlessInferencer />} />
