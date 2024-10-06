@@ -5,8 +5,7 @@ import {
     Dialog,
     DialogContent,
     DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+    DialogTitle
 } from "@/components/ui/dialog";
 import { FileInput, FileUploader, FileUploaderContent, FileUploaderItem } from '@/components/ui/file-input';
 import {
@@ -18,7 +17,9 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { TableType } from "@/types/dev.types";
 import { supabaseClient } from "@/utility";
@@ -128,6 +129,7 @@ export const ComplainCreate = () => {
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
+    const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
 
     // Function to add or update a person in the participants list
     const addOrUpdatePerson = (data: z.infer<typeof complaintSubmissionSchema>["persons"][number]) => {
@@ -202,10 +204,15 @@ export const ComplainCreate = () => {
             return;
         }
 
-        console.log('Submitting complaint data:', data);
+        setIsReviewDialogOpen(true);
+    };
+
+    const handleFinalSubmit = async () => {
+        const data = getValues();
+        setIsReviewDialogOpen(false);
 
         const rollbackSteps = [];
-        
+
         toast.promise(
             (async () => {
                 try {
@@ -232,7 +239,7 @@ export const ComplainCreate = () => {
                     const complaintParticipants = [
                         {
                             complaint_id: complaint_id,
-                            user_id: user.id || null,
+                            user_id: user?.id || null,
                             role: 'Complainant',
                         },
                     ];
@@ -287,7 +294,6 @@ export const ComplainCreate = () => {
                                 complaint_id: complaint_id,
                                 file_name: file.name,
                                 file_path: fileData.path,
-                                uploaded_by: user.id,
                             });
 
                             if (documentError) throw documentError;
@@ -450,154 +456,233 @@ export const ComplainCreate = () => {
                                     </FormItem>
                                 )}
                             />
+                            <div>
+                                <div className="flex flex-row items-center justify-between mb-4">
+                                    <h2 className="text-xl font-semibold">Persons Involved</h2>
+                                    <Button type="button" onClick={() => { setEditingIndex(null); personForm.reset(); setIsDialogOpen(true); }}>
+                                        Add Person
+                                    </Button>
+                                </div>
+                                {/* Dialog for Adding/Editing Person */}
+                                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>{editingIndex !== null ? 'Edit Person' : 'Add Person'}</DialogTitle>
+                                        </DialogHeader>
+                                        <Form {...personForm}>
+                                            <form onSubmit={personForm.handleSubmit((data) => addOrUpdatePerson(data))} className="space-y-4">
+                                                {/* Role Field */}
+                                                <FormField
+                                                    control={personForm.control}
+                                                    name="role"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Role</FormLabel>
+                                                            <FormControl>
+                                                                <Select value={field.value} onValueChange={field.onChange}>
+                                                                    <SelectTrigger className="w-full">
+                                                                        <SelectValue placeholder="Select Role" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {roleOptions.map((role) => (
+                                                                            <SelectItem key={role} value={role}>
+                                                                                {role}
+                                                                            </SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                {/* First Name Field */}
+                                                <FormField
+                                                    control={personForm.control}
+                                                    name="first_name"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>First Name</FormLabel>
+                                                            <FormControl>
+                                                                <Input {...field} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                {/* Last Name Field */}
+                                                <FormField
+                                                    control={personForm.control}
+                                                    name="last_name"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Last Name</FormLabel>
+                                                            <FormControl>
+                                                                <Input {...field} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                {/* Address Field */}
+                                                <FormField
+                                                    control={personForm.control}
+                                                    name="address"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Address</FormLabel>
+                                                            <FormControl>
+                                                                <Input {...field} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                {/* Contact Info Field */}
+                                                <FormField
+                                                    control={personForm.control}
+                                                    name="contact_info"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Contact Info</FormLabel>
+                                                            <FormControl>
+                                                                <Input {...field} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <Button type="submit">
+                                                    {editingIndex !== null ? 'Update Person' : 'Add Person'}
+                                                </Button>
+                                            </form>
+                                        </Form>
+                                    </DialogContent>
+                                </Dialog>
+                                {/* Displaying the List of Participants */}
+                                <div className="grid gap-4 mt-4">
+                                    {getValues("persons").length === 0 ? (
+                                        <Card>
+                                            <CardContent className="p-4 text-center text-muted-foreground/85">
+                                                <UserIcon className="w-8 h-10 mx-auto" />
+                                                <p className="text-sm">No participants added yet.</p>
+                                            </CardContent>
+                                        </Card>
+                                    ) : (
+                                        getValues("persons").map((person, index) => (
+                                            <Card key={`${person.first_name}-${index}`}>
+                                                <CardContent className="flex items-center justify-between p-4">
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <h3 className="text-lg font-semibold">{`${person.first_name} ${person.last_name}`}</h3>
+                                                            <Badge variant="outline">{person.role}</Badge>
+                                                        </div>
+                                                        <div className="flex flex-row flex-wrap gap-2">
+                                                            <p className="inline-flex text-sm text-gray-600"><MapPin className="w-4 h-4 mr-2" /> {person.address}</p>
+                                                            <p className="inline-flex text-sm text-gray-600"><Phone className="w-4 h-4 mr-2" /> {person.contact_info}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex">
+                                                        <Button variant="ghost" size="icon" onClick={() => editPerson(index)}>
+                                                            <Edit className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => removePerson(index)}>
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
                             <Button type="submit" disabled={formState.isSubmitting}>
-                                Save Complaint
+                                File Complaint
                             </Button>
                         </form>
                     </Form>
                 </div>
-                <div>
-                    <div className="flex flex-row items-center justify-between mb-4">
-                        <h2 className="text-xl font-semibold">Persons Involved</h2>
-                        <Button onClick={() => { setEditingIndex(null); personForm.reset(); setIsDialogOpen(true); }}>
-                            Add Person
-                        </Button>
-                    </div>
-                    {/* Dialog for Adding/Editing Person */}
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogTrigger asChild />
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>{editingIndex !== null ? 'Edit Person' : 'Add Person'}</DialogTitle>
-                            </DialogHeader>
-                            <Form {...personForm}>
-                                <form onSubmit={personForm.handleSubmit((data) => addOrUpdatePerson(data))} className="space-y-4">
-                                    {/* Role Field */}
-                                    <FormField
-                                        control={personForm.control}
-                                        name="role"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Role</FormLabel>
-                                                <FormControl>
-                                                    <Select value={field.value} onValueChange={field.onChange}>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Select Role" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {roleOptions.map((role) => (
-                                                                <SelectItem key={role} value={role}>
-                                                                    {role}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    {/* First Name Field */}
-                                    <FormField
-                                        control={personForm.control}
-                                        name="first_name"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>First Name</FormLabel>
-                                                <FormControl>
-                                                    <Input {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    {/* Last Name Field */}
-                                    <FormField
-                                        control={personForm.control}
-                                        name="last_name"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Last Name</FormLabel>
-                                                <FormControl>
-                                                    <Input {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    {/* Address Field */}
-                                    <FormField
-                                        control={personForm.control}
-                                        name="address"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Address</FormLabel>
-                                                <FormControl>
-                                                    <Input {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    {/* Contact Info Field */}
-                                    <FormField
-                                        control={personForm.control}
-                                        name="contact_info"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Contact Info</FormLabel>
-                                                <FormControl>
-                                                    <Input {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <Button type="submit">
-                                        {editingIndex !== null ? 'Update Person' : 'Add Person'}
-                                    </Button>
-                                </form>
-                            </Form>
-                        </DialogContent>
-                    </Dialog>
-                    {/* Displaying the List of Participants */}
-                    <div className="grid gap-4 mt-4">
-                        {getValues("persons").length === 0 ? (
-                            <Card>
-                                <CardContent className="p-4 text-center text-muted-foreground/85">
-                                    <UserIcon className="w-8 h-10 mx-auto" />
-                                    <p className="text-sm">No participants added yet.</p>
-                                </CardContent>
-                            </Card>
-                        ) : (
-                            getValues("persons").map((person, index) => (
-                                <Card key={`${person.first_name}-${index}`}>
-                                    <CardContent className="flex items-center justify-between p-4">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-lg font-semibold">{`${person.first_name} ${person.last_name}`}</h3>
-                                                <Badge variant="outline">{person.role}</Badge>
-                                            </div>
-                                            <div className="flex flex-row flex-wrap gap-2">
-                                                <p className="inline-flex text-sm text-gray-600"><MapPin className="w-4 h-4 mr-2" /> {person.address}</p>
-                                                <p className="inline-flex text-sm text-gray-600"><Phone className="w-4 h-4 mr-2" /> {person.contact_info}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex">
-                                            <Button variant="ghost" size="icon" onClick={() => editPerson(index)}>
-                                                <Edit className="w-4 h-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => removePerson(index)}>
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        )}
-                    </div>
-                </div>
             </div>
+            {/* Review Dialog */}
+            <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+                <DialogContent className="max-w-3xl mx-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-bold text-center">Review Your Complaint</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="h-[60vh] pr-4">
+                        <div className="space-y-6">
+                            <section>
+                                <h3 className="mb-2 text-lg font-semibold">Complaint Details</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">Complaint Type</p>
+                                        <p>{typeOfComplaint.find(t => t.complaint_type_id === getValues("complaint_type_id"))?.description || "N/A"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">Barangay</p>
+                                        <p>{barangays.find(b => b.barangay_id === getValues("barangay_id"))?.name || "N/A"}</p>
+                                    </div>
+                                </div>
+                            </section>
+                            <Separator />
+                            <section>
+                                <h3 className="mb-2 text-lg font-semibold">Case Information</h3>
+                                <div className="space-y-2">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">Case Title</p>
+                                        <p>{getValues("case_title")}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">Description</p>
+                                        <p className="whitespace-pre-wrap">{getValues("description")}</p>
+                                    </div>
+                                </div>
+                            </section>
+                            <Separator />
+                            <section>
+                                <h3 className="mb-2 text-lg font-semibold">Persons Involved</h3>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    {getValues("persons").map((person, index) => (
+                                        <Card key={index}>
+                                            <CardContent className="p-4">
+                                                <p className="font-semibold">{`${person.first_name} ${person.last_name}`}</p>
+                                                <p className="text-sm text-gray-600">{person.role}</p>
+                                                <p className="text-sm text-gray-600">{person.address}</p>
+                                                <p className="text-sm text-gray-600">{person.contact_info}</p>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </section>
+                            <Separator />
+                            <section>
+                                <h3 className="mb-2 text-lg font-semibold">Attached Files</h3>
+                                {getValues("uploadedFiles")?.length > 0 ? (
+                                    <div className="grid gap-2 sm:grid-cols-2">
+                                        {getValues("uploadedFiles").map((file, index) => (
+                                            <div key={index} className="flex items-center p-2 space-x-2 border rounded">
+                                                <Paperclip className="w-4 h-4 text-gray-500" />
+                                                <span className="text-sm truncate">{file.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-600">No files attached</p>
+                                )}
+                            </section>
+                        </div>
+                    </ScrollArea>
+                    <div className="mt-6">
+                        <p className="text-sm text-center text-gray-600">
+                            By submitting, you confirm that all information is accurate and you adhere to the barangay complaint agreement.
+                        </p>
+                        <div className="flex justify-end mt-4 space-x-2">
+                            <Button onClick={handleFinalSubmit}>Submit</Button>
+                            <Button variant="secondary" onClick={() => setIsReviewDialogOpen(false)}>Cancel</Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
