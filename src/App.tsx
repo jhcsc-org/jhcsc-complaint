@@ -20,6 +20,7 @@ import "./App.css";
 import authProvider from "./authProvider";
 import { Layout } from "./components/layout";
 import { AuthPage } from "./components/pages/auth";
+import { Toaster } from "./components/ui/sonner";
 import { ComplainCreate } from "./pages/citizens/complains/create";
 import { ComplainList } from "./pages/citizens/complains/list";
 import { supabaseClient } from "./utility";
@@ -27,6 +28,7 @@ import { supabaseClient } from "./utility";
 function App() {
 	return (
 		<BrowserRouter>
+			<Toaster />
 			<RefineKbarProvider>
 				<DevtoolsProvider>
 					<Refine
