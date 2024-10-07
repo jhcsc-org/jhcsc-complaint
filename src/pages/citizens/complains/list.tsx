@@ -26,6 +26,7 @@ import { debounce } from 'lodash';
 import { AlertCircle, Briefcase, ChevronFirstIcon, ChevronLastIcon, ChevronLeftIcon, ChevronRightIcon, DollarSign, Gavel, HashIcon, Home, MoreVerticalIcon, UserIcon } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useVirtual } from "react-virtual";
+import { UserProfileDashboard } from "../profile.tsx";
 
 const complaintTypeIcons = {
     "Civil Disputes Between Neighbors and Family Members": <UserIcon className="w-10 h-10" />,
@@ -329,7 +330,7 @@ export const ComplainList = () => {
             queryOptions: {
                 enabled: !!userId
             },
-            syncWithLocation: true,
+            syncWithLocation: false,
         }
     });
 
@@ -384,16 +385,17 @@ export const ComplainList = () => {
 
     return (
         <div className="max-w-4xl p-4 mx-auto">
+            <UserProfileDashboard/>
             <motion.div
                 initial="hidden"
                 animate="visible"
                 variants={fadeInVariants}
             >
                 <div className="flex items-center justify-between py-4 border-b">
-                    <div className="flex items-center gap-2">
+                    <div className="grid w-full grid-cols-12 gap-4">
                         <Input
                             placeholder="Search case title..."
-                            className="min-w-[300px]"
+                            className="col-span-8"
                             value={searchValue}
                             onChange={(e) => setSearchValue(e.target.value)}
                         />
@@ -401,7 +403,7 @@ export const ComplainList = () => {
                             value={`${sortField}-${sortOrder}`}
                             onValueChange={handleSortChange}
                         >
-                            <SelectTrigger className="min-w-[250px]">
+                            <SelectTrigger className="col-span-4">
                                 <SelectValue placeholder="Sort by" />
                             </SelectTrigger>
                             <SelectContent>
@@ -414,7 +416,6 @@ export const ComplainList = () => {
                             </SelectContent>
                         </Select>
                     </div>
-                    <Button variant="custom" onClick={() => create("complaints")}>Create complaint</Button>
                 </div>
                 <motion.div
                     style={{ overflowY: 'hidden' }}

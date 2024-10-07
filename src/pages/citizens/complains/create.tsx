@@ -26,6 +26,7 @@ import { supabaseClient } from "@/utility";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "@refinedev/core";
 import { User } from '@supabase/supabase-js';
+import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, Briefcase, CloudUpload, DollarSign, Edit, Gavel, Home, MapPin, Paperclip, Phone, PlusIcon, Trash2, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -65,6 +66,36 @@ const complaintSubmissionSchema = z.object({
 });
 
 type ComplaintFormData = z.infer<typeof complaintSubmissionSchema>;
+
+const fadeInVariants = {
+    hidden: { opacity: 0, filter: "blur(4px)" },
+    visible: {
+        opacity: 1,
+        filter: "blur(0px)",
+        transition: { duration: 0.3, ease: "easeInOut" }
+    },
+    exit: {
+        opacity: 0,
+        filter: "blur(4px)",
+        transition: { duration: 0.2, ease: "easeInOut" }
+    }
+};
+
+const sectionVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.5, ease: "easeOut" }
+    }
+};
+
+// Add these animation variants
+const personCardVariants = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+    exit: { opacity: 0, y: -20, transition: { duration: 0.2 } }
+};
 
 export const ComplainCreate = () => {
     // State for the logged-in user
@@ -327,137 +358,153 @@ export const ComplainCreate = () => {
     };
 
     return (
-        <div className="container p-6 mx-auto">
+        <motion.div 
+            className="container p-6 mx-auto"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={fadeInVariants}
+        >
             <div className="grid max-w-3xl grid-cols-1 gap-8 mx-auto md:grid-cols-1">
                 <div>
                     <h1 className="mb-6 text-3xl font-bold">File a Complaint</h1>
                     <Form {...complaintForm}>
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                            {/* Complaint Type Field */}
-                            <FormField
-                                control={control}
-                                name="complaint_type_id"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Complaint Type</FormLabel>
-                                        <FormControl>
-                                            <Select value={field.value} onValueChange={field.onChange}>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="Select Complaint Type" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {typeOfComplaint.map((type) => (
-                                                        <SelectItem key={type.complaint_type_id} value={type.complaint_type_id}>
-                                                            <div className="flex items-center">
-                                                                {complaintTypeIcons[type.description as keyof typeof complaintTypeIcons] || <Briefcase className="w-5 h-5 mr-2" />}
-                                                                <span>{type.description}</span>
-                                                            </div>
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* Case Title Field */}
-                            <FormField
-                                control={control}
-                                name="case_title"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Case Title</FormLabel>
-                                        <FormControl>
-                                            <Input {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* Description Field */}
-                            <FormField
-                                control={control}
-                                name="description"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Description</FormLabel>
-                                        <FormControl>
-                                            <Textarea className="h-40 resize-none" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* Barangay Field */}
-                            <FormField
-                                control={control}
-                                name="barangay_id"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Barangay</FormLabel>
-                                        <FormControl>
-                                            <Select value={field.value} onValueChange={field.onChange}>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="Select Barangay" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {barangays.map((barangay) => (
-                                                        <SelectItem key={barangay.name} value={barangay.id}>
-                                                            {barangay.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* File Upload Field */}
-                            <FormField
-                                control={control}
-                                name="uploadedFiles"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Attach Document</FormLabel>
-                                        <FormControl>
-                                            <FileUploader
-                                                value={field.value || null}
-                                                onValueChange={field.onChange}
-                                                dropzoneOptions={dropZoneConfig}
-                                                className="relative p-2 rounded-lg bg-card"
-                                            >
-                                                <FileInput
-                                                    id="fileInput"
-                                                    className="outline-dashed outline-1 outline-slate-500"
+                            <motion.section variants={sectionVariants}>
+                                {/* Complaint Type Field */}
+                                <FormField
+                                    control={control}
+                                    name="complaint_type_id"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Complaint Type</FormLabel>
+                                            <FormControl>
+                                                <Select value={field.value} onValueChange={field.onChange}>
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder="Select Complaint Type" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {typeOfComplaint.map((type) => (
+                                                            <SelectItem key={type.complaint_type_id} value={type.complaint_type_id}>
+                                                                <div className="flex items-center">
+                                                                    {complaintTypeIcons[type.description as keyof typeof complaintTypeIcons] || <Briefcase className="w-5 h-5 mr-2" />}
+                                                                    <span>{type.description}</span>
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </motion.section>
+                            <motion.section variants={sectionVariants}>
+                                {/* Case Title Field */}
+                                <FormField
+                                    control={control}
+                                    name="case_title"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Case Title</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </motion.section>
+                            <motion.section variants={sectionVariants}>
+                                {/* Description Field */}
+                                <FormField
+                                    control={control}
+                                    name="description"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Description</FormLabel>
+                                            <FormControl>
+                                                <Textarea className="h-40 resize-none" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </motion.section>
+                            <motion.section variants={sectionVariants}>
+                                {/* Barangay Field */}
+                                <FormField
+                                    control={control}
+                                    name="barangay_id"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Barangay</FormLabel>
+                                            <FormControl>
+                                                <Select value={field.value} onValueChange={field.onChange}>
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder="Select Barangay" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {barangays.map((barangay) => (
+                                                            <SelectItem key={barangay.name} value={barangay.id}>
+                                                                {barangay.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </motion.section>
+                            <motion.section variants={sectionVariants}>
+                                {/* File Upload Field */}
+                                <FormField
+                                    control={control}
+                                    name="uploadedFiles"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Attach Document</FormLabel>
+                                            <FormControl>
+                                                <FileUploader
+                                                    value={field.value || null}
+                                                    onValueChange={field.onChange}
+                                                    dropzoneOptions={dropZoneConfig}
+                                                    className="relative p-2 rounded-lg bg-card"
                                                 >
-                                                    <div className="flex flex-col items-center justify-center w-full p-8 ">
-                                                        <CloudUpload className='w-10 h-10 text-gray-500' />
-                                                        <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
-                                                            <span className="font-semibold">Click to upload</span>
-                                                            &nbsp; or drag and drop
-                                                        </p>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                            Supported file types: JPG, PNG, GIF, PDF, DOC, MP4
-                                                        </p>
-                                                    </div>
-                                                </FileInput>
-                                                <FileUploaderContent>
-                                                    {field.value?.map((file: File, index: number) => (
-                                                        <FileUploaderItem className="px-4 py-4" key={`${file.name}-${index}`} index={index}>
-                                                            <Paperclip className="w-4 h-4 stroke-current" />
-                                                            <span>{file.name}</span>
-                                                        </FileUploaderItem>
-                                                    ))}
-                                                </FileUploaderContent>
-                                            </FileUploader>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <div>
+                                                    <FileInput
+                                                        id="fileInput"
+                                                        className="outline-dashed outline-1 outline-slate-500"
+                                                    >
+                                                        <div className="flex flex-col items-center justify-center w-full p-8 ">
+                                                            <CloudUpload className='w-10 h-10 text-gray-500' />
+                                                            <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
+                                                                <span className="font-semibold">Click to upload</span>
+                                                                &nbsp; or drag and drop
+                                                            </p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                                Supported file types: JPG, PNG, GIF, PDF, DOC, MP4
+                                                            </p>
+                                                        </div>
+                                                    </FileInput>
+                                                    <FileUploaderContent>
+                                                        {field.value?.map((file: File, index: number) => (
+                                                            <FileUploaderItem className="px-4 py-4" key={`${file.name}-${index}`} index={index}>
+                                                                <Paperclip className="w-4 h-4 stroke-current" />
+                                                                <span>{file.name}</span>
+                                                            </FileUploaderItem>
+                                                        ))}
+                                                    </FileUploaderContent>
+                                                </FileUploader>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </motion.section>
+                            <motion.div variants={sectionVariants}>
                                 <div className="flex flex-row items-center justify-between mb-4">
                                     <h2 className="text-xl font-semibold">Persons Involved</h2>
                                     <Button type="button" size="sm" variant="ghost" className="text-xs border" onClick={() => { setEditingIndex(null); personForm.reset(); setIsDialogOpen(true); }}>
@@ -566,42 +613,64 @@ export const ComplainCreate = () => {
                                 </Dialog>
                                 {/* Displaying the List of Participants */}
                                 <div className="grid gap-4 mt-4">
-                                    {watch("persons").length === 0 ? (
-                                        <Card>
-                                            <CardContent className="p-4 text-center text-muted-foreground/85">
-                                                <UserIcon className="w-8 h-10 mx-auto" />
-                                                <p className="text-sm">No participants added yet.</p>
-                                            </CardContent>
-                                        </Card>
-                                    ) : (
-                                        getValues("persons").map((person, index) => (
-                                            <Card key={`${person.first_name}-${index}`}>
-                                                <CardContent className="flex items-center justify-between p-4">
-                                                    <div className="space-y-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <h3 className="text-lg font-semibold">{`${person.first_name} ${person.last_name}`}</h3>
-                                                            <Badge variant="outline">{person.role}</Badge>
-                                                        </div>
-                                                        <div className="flex flex-row flex-wrap gap-2">
-                                                            <p className="inline-flex text-sm text-gray-600"><MapPin className="w-4 h-4 mr-2" /> {person.address}</p>
-                                                            <p className="inline-flex text-sm text-gray-600"><Phone className="w-4 h-4 mr-2" /> {person.contact_info}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex">
-                                                        <Button type="button" variant="ghost" size="icon" onClick={() => editPerson(index)}>
-                                                            <Edit className="w-4 h-4" />
-                                                        </Button>
-                                                        <Button type="button" variant="ghost" size="icon" onClick={() => removePerson(index)}>
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </Button>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        ))
-                                    )}
+                                    <AnimatePresence mode="wait" initial={false}>
+                                        {watch("persons").length === 0 ? (
+                                            <motion.div
+                                                key="no-participants"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                            >
+                                                <Card>
+                                                    <CardContent className="p-4 text-center text-muted-foreground/85">
+                                                        <UserIcon className="w-8 h-10 mx-auto" />
+                                                        <p className="text-sm">No participants added yet.</p>
+                                                    </CardContent>
+                                                </Card>
+                                            </motion.div>
+                                        ) : (
+                                            getValues("persons").map((person, index) => (
+                                                <motion.div
+                                                    key={`${person.first_name}-${index}`}
+                                                    variants={personCardVariants}
+                                                    initial="initial"
+                                                    animate="animate"
+                                                    exit="exit"
+                                                    layout
+                                                >
+                                                    <Card>
+                                                        <CardContent className="flex items-center justify-between p-4">
+                                                            <div className="space-y-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <h3 className="text-lg font-semibold">{`${person.first_name} ${person.last_name}`}</h3>
+                                                                    <Badge variant="outline">{person.role}</Badge>
+                                                                </div>
+                                                                <div className="flex flex-row flex-wrap gap-2">
+                                                                    <p className="inline-flex text-sm text-gray-600"><MapPin className="w-4 h-4 mr-2" /> {person.address}</p>
+                                                                    <p className="inline-flex text-sm text-gray-600"><Phone className="w-4 h-4 mr-2" /> {person.contact_info}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex">
+                                                                <Button type="button" variant="ghost" size="icon" onClick={() => editPerson(index)}>
+                                                                    <Edit className="w-4 h-4" />
+                                                                </Button>
+                                                                <Button type="button" variant="ghost" size="icon" onClick={() => removePerson(index)}>
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                </motion.div>
+                                            ))
+                                        )}
+                                    </AnimatePresence>
                                 </div>
-                            </div>
-                            <Button type="submit" size="sm" className="w-full" disabled={formState.isSubmitting}>
+                            </motion.div>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={formState.isSubmitting}
+                            >
                                 <span className="text-sm">File Complaint</span>
                             </Button>
                         </form>
@@ -691,6 +760,6 @@ export const ComplainCreate = () => {
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
+        </motion.div>
     );
 };

@@ -14,7 +14,7 @@ import routerBindings, {
 	UnsavedChangesNotifier,
 } from "@refinedev/react-router-v6";
 import { dataProvider, liveProvider } from "@refinedev/supabase";
-import { ScanSearchIcon, SendIcon, SettingsIcon, UserIcon } from "lucide-react";
+import { ScanSearchIcon, SendIcon } from "lucide-react";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import "./App.css";
 import authProvider from "./authProvider";
@@ -24,7 +24,6 @@ import { Toaster } from "./components/ui/sonner";
 import { ComplainCreate } from "./pages/citizens/complains/create";
 import { ComplainList } from "./pages/citizens/complains/list";
 import { ComplainShow } from "./pages/citizens/complains/show";
-import { UserProfileDashboard } from "./pages/citizens/profile.tsx";
 import { supabaseClient } from "./utility";
 
 function App() {
@@ -38,20 +37,12 @@ function App() {
 						liveProvider={liveProvider(supabaseClient)}
 						authProvider={authProvider}
 						routerProvider={routerBindings}
-						resources={[
-							{
-								name: "user_profile",
-								list: "/",
-								meta: {
-									label: "Profile",
-									icon: <UserIcon className="w-5 h-5" />
-								},
-							}, {
+						resources={[ {
 								name: "complaints",
-								list: "/complaints",
-								create: "/complaints/create",
-								edit: "/complaints/edit/:id",
-								show: "/complaints/show/:id",
+								list: "/",
+								create: "/create",
+								edit: "/edit/:id",
+								show: "/show/:id",
 								meta: {
 									label: "Track Complaint",
 									icon: <ScanSearchIcon className="w-5 h-5" />
@@ -59,20 +50,11 @@ function App() {
 
 							}, {
 								name: "complaints",
-								list: "/complaints/create",
+								list: "/create",
 								identifier: "complaint_id",
 								meta: {
 									label: "File Complaint",
 									icon: <SendIcon className="w-5 h-5" />
-								},
-							}, {
-								name: "settings",
-								edit: "/settings",
-								list: "/settings",
-								meta: {
-									hide: false,
-									label: "Settings",
-									icon: <SettingsIcon className="w-5 h-5" />
 								},
 							}]}
 						options={{
@@ -96,8 +78,7 @@ function App() {
 									</Authenticated>
 								}
 							>
-								<Route path="/" element={<UserProfileDashboard />} />
-								<Route path="/complaints" element={<Outlet />}>
+								<Route path="/" element={<Outlet />}>
 									<Route index element={<ComplainList />} />
 									<Route path="create" element={<ComplainCreate />} />
 									<Route path="edit/:id" element={<HeadlessInferencer />} />
