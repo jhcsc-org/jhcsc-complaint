@@ -26,7 +26,7 @@ import { supabaseClient } from "@/utility";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "@refinedev/core";
 import { User } from '@supabase/supabase-js';
-import { AlertCircle, Briefcase, CloudUpload, DollarSign, Edit, Gavel, Home, MapPin, Paperclip, Phone, Trash2, User as UserIcon } from "lucide-react";
+import { AlertCircle, Briefcase, CloudUpload, DollarSign, Edit, Gavel, Home, MapPin, Paperclip, Phone, PlusIcon, Trash2, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from 'sonner';
@@ -126,7 +126,7 @@ export const ComplainCreate = () => {
         },
     });
 
-    const { handleSubmit, formState, control, setValue, getValues } = complaintForm;
+    const { handleSubmit, formState, control, setValue, getValues, watch } = complaintForm;
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -328,7 +328,7 @@ export const ComplainCreate = () => {
 
     return (
         <div className="container p-6 mx-auto">
-            <div className="grid max-w-xl grid-cols-1 gap-8 mx-auto md:grid-cols-1">
+            <div className="grid max-w-3xl grid-cols-1 gap-8 mx-auto md:grid-cols-1">
                 <div>
                     <h1 className="mb-6 text-3xl font-bold">File a Complaint</h1>
                     <Form {...complaintForm}>
@@ -445,7 +445,7 @@ export const ComplainCreate = () => {
                                                 </FileInput>
                                                 <FileUploaderContent>
                                                     {field.value?.map((file: File, index: number) => (
-                                                        <FileUploaderItem key={`${file.name}-${index}`} index={index}>
+                                                        <FileUploaderItem className="px-4 py-4" key={`${file.name}-${index}`} index={index}>
                                                             <Paperclip className="w-4 h-4 stroke-current" />
                                                             <span>{file.name}</span>
                                                         </FileUploaderItem>
@@ -460,8 +460,9 @@ export const ComplainCreate = () => {
                             <div>
                                 <div className="flex flex-row items-center justify-between mb-4">
                                     <h2 className="text-xl font-semibold">Persons Involved</h2>
-                                    <Button type="button" onClick={() => { setEditingIndex(null); personForm.reset(); setIsDialogOpen(true); }}>
-                                        Add Person
+                                    <Button type="button" size="sm" variant="ghost" className="text-xs border" onClick={() => { setEditingIndex(null); personForm.reset(); setIsDialogOpen(true); }}>
+                                        <PlusIcon className="w-4 h-4 mr-2" />
+                                        Add
                                     </Button>
                                 </div>
                                 {/* Dialog for Adding/Editing Person */}
@@ -553,7 +554,10 @@ export const ComplainCreate = () => {
                                                         </FormItem>
                                                     )}
                                                 />
-                                                <Button type="submit">
+                                                <Button type="button" onClick={() => {
+                                                    addOrUpdatePerson(personForm.getValues());
+                                                    setIsDialogOpen(false);
+                                                }}>
                                                     {editingIndex !== null ? 'Update Person' : 'Add Person'}
                                                 </Button>
                                             </form>
@@ -562,7 +566,7 @@ export const ComplainCreate = () => {
                                 </Dialog>
                                 {/* Displaying the List of Participants */}
                                 <div className="grid gap-4 mt-4">
-                                    {getValues("persons").length === 0 ? (
+                                    {watch("persons").length === 0 ? (
                                         <Card>
                                             <CardContent className="p-4 text-center text-muted-foreground/85">
                                                 <UserIcon className="w-8 h-10 mx-auto" />
@@ -584,10 +588,10 @@ export const ComplainCreate = () => {
                                                         </div>
                                                     </div>
                                                     <div className="flex">
-                                                        <Button variant="ghost" size="icon" onClick={() => editPerson(index)}>
+                                                        <Button type="button" variant="ghost" size="icon" onClick={() => editPerson(index)}>
                                                             <Edit className="w-4 h-4" />
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => removePerson(index)}>
+                                                        <Button type="button" variant="ghost" size="icon" onClick={() => removePerson(index)}>
                                                             <Trash2 className="w-4 h-4" />
                                                         </Button>
                                                     </div>
@@ -597,8 +601,8 @@ export const ComplainCreate = () => {
                                     )}
                                 </div>
                             </div>
-                            <Button type="submit" disabled={formState.isSubmitting}>
-                                File Complaint
+                            <Button type="submit" size="sm" className="w-full" disabled={formState.isSubmitting}>
+                                <span className="text-sm">File Complaint</span>
                             </Button>
                         </form>
                     </Form>
@@ -621,7 +625,7 @@ export const ComplainCreate = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-gray-500">Barangay</p>
-                                        <p>{barangays.find(b => b.barangay_id === getValues("barangay_id"))?.name || "N/A"}</p>
+                                        <p>{barangays.find(b => b.id === getValues("barangay_id"))?.name || "N/A"}</p>
                                     </div>
                                 </div>
                             </section>
@@ -631,11 +635,11 @@ export const ComplainCreate = () => {
                                 <div className="space-y-2">
                                     <div>
                                         <p className="text-sm font-medium text-gray-500">Case Title</p>
-                                        <p>{getValues("case_title")}</p>
+                                        <p>{watch("case_title")}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-gray-500">Description</p>
-                                        <p className="whitespace-pre-wrap">{getValues("description")}</p>
+                                        <p className="whitespace-pre-wrap">{watch("description")}</p>
                                     </div>
                                 </div>
                             </section>
@@ -643,8 +647,8 @@ export const ComplainCreate = () => {
                             <section>
                                 <h3 className="mb-2 text-lg font-semibold">Persons Involved</h3>
                                 <div className="grid gap-4 sm:grid-cols-2">
-                                    {getValues("persons").map((person, index) => (
-                                        <Card key={index}>
+                                    {watch("persons").map((person, index) => (
+                                        <Card key={`${person.first_name}-${index}`}>
                                             <CardContent className="p-4">
                                                 <p className="font-semibold">{`${person.first_name} ${person.last_name}`}</p>
                                                 <p className="text-sm text-gray-600">{person.role}</p>
@@ -658,9 +662,9 @@ export const ComplainCreate = () => {
                             <Separator />
                             <section>
                                 <h3 className="mb-2 text-lg font-semibold">Attached Files</h3>
-                                {getValues("uploadedFiles")?.length > 0 ? (
+                                {watch("uploadedFiles")?.length > 0 ? (
                                     <div className="grid gap-2 sm:grid-cols-2">
-                                        {getValues("uploadedFiles").map((file, index) => (
+                                        {watch("uploadedFiles").map((file, index) => (
                                             <div key={index} className="flex items-center p-2 space-x-2 border rounded">
                                                 <Paperclip className="w-4 h-4 text-gray-500" />
                                                 <span className="text-sm truncate">{file.name}</span>

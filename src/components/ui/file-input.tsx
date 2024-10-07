@@ -5,21 +5,21 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { Trash2 as RemoveIcon } from 'lucide-react'
 import {
-    Dispatch,
-    SetStateAction,
-    createContext,
-    forwardRef,
-    useCallback,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
+  Dispatch,
+  SetStateAction,
+  createContext,
+  forwardRef,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
 } from 'react'
 import {
-    DropzoneOptions,
-    DropzoneState,
-    FileRejection,
-    useDropzone,
+  DropzoneOptions,
+  DropzoneState,
+  FileRejection,
+  useDropzone,
 } from 'react-dropzone'
 import { toast } from 'sonner'
 
@@ -301,8 +301,9 @@ export const FileUploaderItem = forwardRef<
       <button
         type="button"
         className={cn(
-          'absolute',
+          'flex flex-row',
           direction === 'rtl' ? 'top-1 left-1' : 'top-1 right-1',
+          'items-center justify-center'
         )}
         onClick={() => removeFileFromSet(index)}
       >

@@ -219,6 +219,7 @@ export type Database = {
           created_at: string | null
           date_filed: string
           description: string
+          filed_by: string | null
           id: string
           resolution_date: string | null
           status: Database["public"]["Enums"]["complaint_status"]
@@ -232,6 +233,7 @@ export type Database = {
           created_at?: string | null
           date_filed?: string
           description: string
+          filed_by?: string | null
           id?: string
           resolution_date?: string | null
           status?: Database["public"]["Enums"]["complaint_status"]
@@ -245,6 +247,7 @@ export type Database = {
           created_at?: string | null
           date_filed?: string
           description?: string
+          filed_by?: string | null
           id?: string
           resolution_date?: string | null
           status?: Database["public"]["Enums"]["complaint_status"]
@@ -264,6 +267,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "complaint_types"
             referencedColumns: ["complaint_type_id"]
+          },
+          {
+            foreignKeyName: "complaints_filed_by_fkey"
+            columns: ["filed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }

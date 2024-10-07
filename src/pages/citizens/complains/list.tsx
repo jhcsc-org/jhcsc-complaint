@@ -13,6 +13,7 @@ import {
     Table,
     TableBody
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { TableType } from "@/types/dev.types";
 import { useList, useNavigation } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
@@ -183,8 +184,27 @@ export const ComplainList = () => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <Badge variant="default" className="text-xs font-medium bg-muted-foreground/25">
-                                                {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1).toLowerCase()}
+                                            <Badge
+                                                variant="default"
+                                                className={cn(
+                                                    "text-xs font-medium",
+                                                    {
+                                                        "bg-yellow-800 hover:bg-yellow-700": row.original.status === "PENDING",
+                                                        "bg-blue-800 hover:bg-blue-700": row.original.status === "IN_PROCESS",
+                                                        "bg-green-800 hover:bg-green-700": row.original.status === "RESOLVED",
+                                                        "bg-muted-foreground/25 text-muted-foreground": row.original.status === "DISMISSED",
+                                                    }
+                                                )}
+                                            >
+                                                {row.original.status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
+                                            </Badge>
+                                            <Badge variant="outline">
+                                                {new Date(row.original.date_filed).toLocaleString("en-US", {
+                                                    timeZone: "UTC",
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                })}
                                             </Badge>
                                             <Popover>
                                                 <PopoverTrigger asChild>

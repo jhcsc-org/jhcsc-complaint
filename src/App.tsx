@@ -3,7 +3,7 @@ import {
 	ErrorComponent,
 	Refine
 } from "@refinedev/core";
-import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
+import { DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
 import { HeadlessInferencer } from "@refinedev/inferencer/headless";
@@ -14,7 +14,7 @@ import routerBindings, {
 	UnsavedChangesNotifier,
 } from "@refinedev/react-router-v6";
 import { dataProvider, liveProvider } from "@refinedev/supabase";
-import { FileTextIcon } from "lucide-react";
+import { ScanSearchIcon, SettingsIcon } from "lucide-react";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import "./App.css";
 import authProvider from "./authProvider";
@@ -45,16 +45,28 @@ function App() {
 								edit: "/complaints/edit/:id",
 								show: "/complaints/show/:id",
 								meta: {
-									label: "Complain",
-									icon: <FileTextIcon className="w-5 h-5" />
+									label: "Track Complaints",
+									icon: <ScanSearchIcon className="w-5 h-5" />
 								},
+								
 							},
+							{
+								name: "settings",
+								edit: "/settings",
+								list: "/settings",
+								meta: {
+									hide: false,
+									label: "Settings",
+									icon: <SettingsIcon className="w-5 h-5" />
+								},
+							}
 						]}
 						options={{
 							syncWithLocation: true,
 							warnWhenUnsavedChanges: true,
 							useNewQueryKeys: true,
 							projectId: "ySPYms-OjD2aW-smWOMJ",
+							liveMode: "auto",
 						}}
 					>
 						<Routes>
@@ -120,7 +132,6 @@ function App() {
 						<UnsavedChangesNotifier />
 						<DocumentTitleHandler />
 					</Refine>
-					<DevtoolsPanel />
 				</DevtoolsProvider>
 			</RefineKbarProvider>
 		</BrowserRouter>
