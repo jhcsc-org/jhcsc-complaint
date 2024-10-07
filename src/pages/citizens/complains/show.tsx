@@ -1,14 +1,16 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { FileInput, FileUploader, FileUploaderContent, FileUploaderItem } from '@/components/ui/file-input';
 import { Dialog, DialogClose, DialogContainer, DialogContent, DialogTrigger } from "@/components/ui/motion-dialog";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { TableType } from "@/types/dev.types";
 import { supabaseClient } from "@/utility";
 import { useList, useNavigation, useResource, useShow } from "@refinedev/core";
-import { AlertCircle, DollarSign, FileIcon, Gavel, Home, MapPin, Paperclip, Phone, UserIcon, XIcon } from "lucide-react";
+import { AlertCircle, CloudUpload, DollarSign, FileIcon, Gavel, Home, MapPin, Paperclip, Phone, UserIcon, XIcon } from "lucide-react";
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { toast } from 'sonner';
 
 const DialogImage = lazy(() => import('@/components/ui/motion-dialog').then(mod => ({ default: mod.DialogImage })));
 
@@ -84,6 +86,7 @@ export const ComplainShow: React.FC = () => {
 
     const [documentUrls, setDocumentUrls] = useState<Record<string, string>>({});
     const [urlErrors, setUrlErrors] = useState<Record<string, string>>({});
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
     useEffect(() => {
         if (documentsData) {
@@ -120,9 +123,45 @@ export const ComplainShow: React.FC = () => {
     }, [documentsData]);
 
     const sanitizedDocumentUrls = useMemo(() => {
-        // Here you can add sanitization logic if necessary
         return documentUrls;
     }, [documentUrls]);
+
+    const handleUpload = async () => {
+        if (uploadedFiles.length === 0) {
+            toast.error("Please select a file to upload.");
+            return;
+        }
+
+        try {
+            await Promise.all(uploadedFiles.map(async (file) => {
+                const { data, error } = await supabaseClient
+                    .storage
+                    .from('complaint_documents')
+                    .upload(`complaints/${id}/${file.name}`, file);
+
+                if (error) {
+                    throw error;
+                }
+
+                const { error: documentError } = await supabaseClient.from('complaint_documents').insert({
+                    complaint_id: id,
+                    file_name: file.name,
+                    file_path: data.path,
+                });
+
+                if (documentError) {
+                    throw documentError;
+                }
+            }));
+
+            toast.success("Files uploaded successfully.");
+            setUploadedFiles([]);
+            // Optionally, refresh the documents list here
+        } catch (err) {
+            console.error("Error during file upload:", err);
+            toast.error("Failed to upload files.");
+        }
+    };
 
     if (isLoading) {
         return <div>Loading...</div>;
@@ -134,7 +173,6 @@ export const ComplainShow: React.FC = () => {
                 <h1 className="text-2xl font-bold">Complaint Details</h1>
                 <div className="flex gap-2">
                     <Button onClick={() => list("complaints")}>Back to List</Button>
-                    <Button onClick={() => edit("complaints", id ?? "")}>Edit</Button>
                 </div>
             </div>
             <Card>
@@ -220,7 +258,7 @@ export const ComplainShow: React.FC = () => {
                         <section>
                             <h3 className="mb-2 text-lg font-semibold">Attached Files</h3>
                             {documentsData?.data?.length ? (
-                                <div className="grid gap-2 text-sm sm:grid-cols-2" >
+                                <div className="grid gap-2 text-sm sm:grid-cols-2">
                                     {documentsData.data.map((file, index) => {
                                         const fileUrl = sanitizedDocumentUrls?.[file.file_name];
                                         const fileType = file.file_name.split('.').pop()?.toLowerCase();
@@ -323,6 +361,50 @@ export const ComplainShow: React.FC = () => {
                             ) : (
                                 <p className="text-sm text-gray-600">No files attached</p>
                             )}
+                            <div className="mt-4">
+                                <h3 className="mb-2 text-lg font-semibold">Upload Additional</h3>
+                                <FileUploader
+                                    value={uploadedFiles}
+                                    onValueChange={(files) => setUploadedFiles(files || [])}
+                                    dropzoneOptions={{
+                                        accept: {
+                                            'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
+                                            'application/pdf': ['.pdf'],
+                                            'video/*': ['.mp4', '.avi', '.mov'],
+                                            'application/msword': ['.doc', '.docx'],
+                                        },
+                                        maxFiles: 5,
+                                        maxSize: 10 * 1024 * 1024, // 10 MB
+                                        multiple: true,
+                                    }}
+                                    className="relative p-1 rounded-lg bg-card"
+                                >
+                                    <FileInput
+                                        id="fileInput"
+                                        className="outline-dashed outline-1 outline-slate-500"
+                                    >
+                                        <div className="flex flex-col items-center justify-center w-full p-8 ">
+                                            <CloudUpload className='w-10 h-10 text-gray-500' />
+                                            <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
+                                                <span className="font-semibold">Click to upload</span>
+                                                &nbsp; or drag and drop
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Supported file types: JPG, PNG, GIF, PDF, DOC, MP4
+                                            </p>
+                                        </div>
+                                    </FileInput>
+                                    <FileUploaderContent>
+                                        {uploadedFiles.map((file, index) => (
+                                            <FileUploaderItem className="px-4 py-4" key={`${file.name}-${index}`} index={index}>
+                                                <Paperclip className="w-4 h-4 stroke-current" />
+                                                <span>{file.name}</span>
+                                            </FileUploaderItem>
+                                        ))}
+                                    </FileUploaderContent>
+                                </FileUploader>
+                                <Button onClick={handleUpload} className="w-full mt-2">Upload Document</Button>
+                            </div>
                         </section>
                         <Separator />
                         {/* Complaint History section */}

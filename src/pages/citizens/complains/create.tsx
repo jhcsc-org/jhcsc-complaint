@@ -662,10 +662,13 @@ export const ComplainCreate = () => {
                             <Separator />
                             <section>
                                 <h3 className="mb-2 text-lg font-semibold">Attached Files</h3>
+
+                                {/* @ts-ignore */}
                                 {watch("uploadedFiles")?.length > 0 ? (
                                     <div className="grid gap-2 sm:grid-cols-2">
+                                        {/* @ts-ignore */}
                                         {watch("uploadedFiles").map((file, index) => (
-                                            <div key={index} className="flex items-center p-2 space-x-2 border rounded">
+                                            <div key={`${file.name}-${index}`} className="flex items-center p-2 space-x-2 border rounded">
                                                 <Paperclip className="w-4 h-4 text-gray-500" />
                                                 <span className="text-sm truncate">{file.name}</span>
                                             </div>
