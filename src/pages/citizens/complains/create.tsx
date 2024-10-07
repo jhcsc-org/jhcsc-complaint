@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TableType } from "@/types/dev.types";
 import { supabaseClient } from "@/utility";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigation } from "@refinedev/core";
 import { User } from '@supabase/supabase-js';
 import { AlertCircle, Briefcase, CloudUpload, DollarSign, Edit, Gavel, Home, MapPin, Paperclip, Phone, Trash2, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from 'react';
@@ -207,6 +208,9 @@ export const ComplainCreate = () => {
         setIsReviewDialogOpen(true);
     };
 
+
+    const { show } = useNavigation();
+    let complaint_id: string;
     const handleFinalSubmit = async () => {
         const data = getValues();
         setIsReviewDialogOpen(false);
@@ -230,7 +234,7 @@ export const ComplainCreate = () => {
 
                     if (complaintError) throw complaintError;
 
-                    const complaint_id = complaintData.id;
+                    complaint_id = complaintData.id;
                     rollbackSteps.push(() => supabaseClient.from('complaints').delete().eq('id', complaint_id));
 
                     toast.success('Complaint created successfully');
@@ -319,7 +323,10 @@ export const ComplainCreate = () => {
             })(),
             {
                 loading: 'Submitting complaint...',
-                success: (message) => message,
+                success: (message) => {
+                    show("complaints", complaint_id);
+                    return message;
+                },
                 error: (error) => `Submission failed: ${error.message}`,
             }
         );

@@ -28,7 +28,7 @@ import { supabaseClient } from "./utility";
 function App() {
 	return (
 		<BrowserRouter>
-			<Toaster expand visibleToasts={3} />
+			<Toaster richColors expand visibleToasts={3} />
 			<RefineKbarProvider>
 				<DevtoolsProvider>
 					<Refine
