@@ -23,6 +23,7 @@ import { AuthPage } from "./components/pages/auth";
 import { Toaster } from "./components/ui/sonner";
 import { ComplainCreate } from "./pages/citizens/complains/create";
 import { ComplainList } from "./pages/citizens/complains/list";
+import { ComplainShow } from "./pages/citizens/complains/show";
 import { supabaseClient } from "./utility";
 
 function App() {
@@ -77,7 +78,7 @@ function App() {
 									<Route index element={<ComplainList />} />
 									<Route path="create" element={<ComplainCreate />} />
 									<Route path="edit/:id" element={<HeadlessInferencer />} />
-									<Route path="show/:id" element={<HeadlessInferencer />} />
+									<Route path="show/:id" element={<ComplainShow />} />
 								</Route>
 								<Route path="*" element={<ErrorComponent />} />
 							</Route>

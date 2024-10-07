@@ -240,17 +240,11 @@ export const ComplainCreate = () => {
                     toast.success('Complaint created successfully');
 
                     // Add participants
-                    const complaintParticipants = [
-                        {
-                            complaint_id: complaint_id,
-                            user_id: user?.id || null,
-                            role: 'Complainant',
-                        },
+                    const complaintParticipants: Pick<TableType<"complaint_participants">, "complaint_id" | "role" | "person_id">[] = [
                     ];
 
                     for (const person of data.persons) {
                         let person_id = person.person_id;
-
                         if (!person_id) {
                             const { data: personData, error: personError } = await supabaseClient
                                 .from('people')
@@ -264,16 +258,16 @@ export const ComplainCreate = () => {
                                 .single();
 
                             if (personError) throw personError;
-
                             person_id = personData.person_id;
                             rollbackSteps.push(() => supabaseClient.from('people').delete().eq('person_id', person_id));
                         }
-
-                        complaintParticipants.push({
-                            complaint_id: complaint_id,
-                            user_id: person.person_id || null,
-                            role: person.role,
-                        });
+                        if (person_id) {
+                            complaintParticipants.push({
+                                complaint_id: complaint_id,
+                                person_id: person_id,
+                                role: person.role,
+                            });
+                        }
                     }
 
                     await Promise.all(complaintParticipants.map(async (participant) => {
@@ -409,7 +403,7 @@ export const ComplainCreate = () => {
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {barangays.map((barangay) => (
-                                                        <SelectItem key={barangay.barangay_id} value={barangay.barangay_id}>
+                                                        <SelectItem key={barangay.name} value={barangay.id}>
                                                             {barangay.name}
                                                         </SelectItem>
                                                     ))}

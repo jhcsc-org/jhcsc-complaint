@@ -11,17 +11,17 @@ export type Database = {
     Tables: {
       barangays: {
         Row: {
-          barangay_id: string
+          id: string
           municipality_id: number | null
           name: string
         }
         Insert: {
-          barangay_id?: string
+          id?: string
           municipality_id?: number | null
           name: string
         }
         Update: {
-          barangay_id?: string
+          id?: string
           municipality_id?: number | null
           name?: string
         }
@@ -64,6 +64,13 @@ export type Database = {
           uploaded_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "complaint_documents_complaint_id_fkey"
+            columns: ["complaint_id"]
+            isOneToOne: false
+            referencedRelation: "complaint_view"
+            referencedColumns: ["complaint_id"]
+          },
           {
             foreignKeyName: "complaint_documents_complaint_id_fkey"
             columns: ["complaint_id"]
@@ -117,6 +124,13 @@ export type Database = {
             foreignKeyName: "complaint_history_complaint_id_fkey"
             columns: ["complaint_id"]
             isOneToOne: false
+            referencedRelation: "complaint_view"
+            referencedColumns: ["complaint_id"]
+          },
+          {
+            foreignKeyName: "complaint_history_complaint_id_fkey"
+            columns: ["complaint_id"]
+            isOneToOne: false
             referencedRelation: "complaints"
             referencedColumns: ["id"]
           },
@@ -124,33 +138,47 @@ export type Database = {
       }
       complaint_participants: {
         Row: {
+          added_by: string | null
           complaint_id: string | null
           created_at: string | null
           participant_id: string
           person_id: string | null
           role: string
           updated_at: string | null
-          user_id: string | null
         }
         Insert: {
+          added_by?: string | null
           complaint_id?: string | null
           created_at?: string | null
           participant_id?: string
           person_id?: string | null
           role: string
           updated_at?: string | null
-          user_id?: string | null
         }
         Update: {
+          added_by?: string | null
           complaint_id?: string | null
           created_at?: string | null
           participant_id?: string
           person_id?: string | null
           role?: string
           updated_at?: string | null
-          user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "complaint_participants_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaint_participants_complaint_id_fkey"
+            columns: ["complaint_id"]
+            isOneToOne: false
+            referencedRelation: "complaint_view"
+            referencedColumns: ["complaint_id"]
+          },
           {
             foreignKeyName: "complaint_participants_complaint_id_fkey"
             columns: ["complaint_id"]
@@ -164,13 +192,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "people"
             referencedColumns: ["person_id"]
-          },
-          {
-            foreignKeyName: "complaint_participants_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -235,7 +256,7 @@ export type Database = {
             columns: ["barangay_id"]
             isOneToOne: false
             referencedRelation: "barangays"
-            referencedColumns: ["barangay_id"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "complaints_complaint_type_id_fkey"
@@ -277,7 +298,7 @@ export type Database = {
             columns: ["barangay_id"]
             isOneToOne: false
             referencedRelation: "barangays"
-            referencedColumns: ["barangay_id"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "lupon_members_user_id_fkey"
@@ -418,7 +439,23 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      complaint_view: {
+        Row: {
+          barangay_name: string | null
+          case_number: string | null
+          case_title: string | null
+          complaint_description: string | null
+          complaint_id: string | null
+          complaint_type: string | null
+          date_filed: string | null
+          documents: Json | null
+          history: Json | null
+          participants: Json | null
+          resolution_date: string | null
+          status: Database["public"]["Enums"]["complaint_status"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
