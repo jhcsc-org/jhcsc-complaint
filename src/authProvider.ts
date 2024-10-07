@@ -1,8 +1,8 @@
-import { AuthBindings } from "@refinedev/core";
+import { AuthProvider } from "@refinedev/core";
 
 import { supabaseClient } from "./utility";
 
-const authProvider: AuthBindings = {
+const authProvider: AuthProvider = {
   login: async ({ email, password, providerName }) => {
     // sign in with oauth
     try {
@@ -65,26 +65,27 @@ const authProvider: AuthBindings = {
     password,
     options: {
       data: {
-        full_name: fullName,
-        purok,
-        street,
-        block_number: blockNumber,
-        house_number: houseNumber,
+        first_name,
+        middle_name,
+        last_name, 
+        role_id,
+        barangay_id,
+        address
       },
     },
   }) => {
-    console.log("HELLO WORLD!")
     try {
+      console.log(first_name, middle_name, last_name, address, barangay_id);
       const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: fullName,
-            purok: purok,
-            street,
-            block_number: blockNumber,
-            house_number: houseNumber,
+            first_name,
+            middle_name,
+            last_name, 
+            address,
+            barangay_id,
           },
         },
       });

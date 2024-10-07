@@ -34,6 +34,7 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
     },
     liveMode: "auto",
   });
+  const full_name = `${user?.user_metadata.first_name} ${user?.user_metadata.middle_name ? `${user.user_metadata.middle_name} ` : ''}${user?.user_metadata.last_name}`;
   return (
     <div className="flex min-h-screen py-4 lg:pr-4">
       <nav className="fixed top-0 left-0 justify-between hidden w-64 h-full py-5 lg:flex lg:flex-col">
@@ -76,8 +77,8 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
                     <AvatarFallback>CN</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-xs font-medium text-left">{user?.user_metadata?.full_name || "Citizen of Philippines"}</p>
-                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    <p className="text-xs font-medium text-left">{full_name}</p>
+                    <p className="text-xs text-left text-muted-foreground">{user?.email}</p>
                   </div>
                 </div>
               </DropdownMenuTrigger>

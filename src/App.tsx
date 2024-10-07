@@ -14,7 +14,7 @@ import routerBindings, {
 	UnsavedChangesNotifier,
 } from "@refinedev/react-router-v6";
 import { dataProvider, liveProvider } from "@refinedev/supabase";
-import { ScanSearchIcon, SettingsIcon } from "lucide-react";
+import { ScanSearchIcon, SendIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import "./App.css";
 import authProvider from "./authProvider";
@@ -24,11 +24,12 @@ import { Toaster } from "./components/ui/sonner";
 import { ComplainCreate } from "./pages/citizens/complains/create";
 import { ComplainList } from "./pages/citizens/complains/list";
 import { ComplainShow } from "./pages/citizens/complains/show";
+import { UserProfileDashboard } from "./pages/citizens/profile.tsx";
 import { supabaseClient } from "./utility";
 
 function App() {
 	return (
-		<BrowserRouter>
+		(<BrowserRouter>
 			<Toaster richColors expand visibleToasts={3} />
 			<RefineKbarProvider>
 				<DevtoolsProvider>
@@ -39,18 +40,32 @@ function App() {
 						routerProvider={routerBindings}
 						resources={[
 							{
+								name: "user_profile",
+								list: "/",
+								meta: {
+									label: "Profile",
+									icon: <UserIcon className="w-5 h-5" />
+								},
+							}, {
 								name: "complaints",
 								list: "/complaints",
 								create: "/complaints/create",
 								edit: "/complaints/edit/:id",
 								show: "/complaints/show/:id",
 								meta: {
-									label: "Track Complaints",
+									label: "Track Complaint",
 									icon: <ScanSearchIcon className="w-5 h-5" />
 								},
-								
-							},
-							{
+
+							}, {
+								name: "complaints",
+								list: "/complaints/create",
+								identifier: "complaint_id",
+								meta: {
+									label: "File Complaint",
+									icon: <SendIcon className="w-5 h-5" />
+								},
+							}, {
 								name: "settings",
 								edit: "/settings",
 								list: "/settings",
@@ -59,8 +74,7 @@ function App() {
 									label: "Settings",
 									icon: <SettingsIcon className="w-5 h-5" />
 								},
-							}
-						]}
+							}]}
 						options={{
 							syncWithLocation: true,
 							warnWhenUnsavedChanges: true,
@@ -82,11 +96,8 @@ function App() {
 									</Authenticated>
 								}
 							>
-								<Route
-									index
-									element={<NavigateToResource resource="complaints" />}
-								/>
-								<Route path="/complaints">
+								<Route path="/" element={<UserProfileDashboard />} />
+								<Route path="/complaints" element={<Outlet />}>
 									<Route index element={<ComplainList />} />
 									<Route path="create" element={<ComplainCreate />} />
 									<Route path="edit/:id" element={<HeadlessInferencer />} />
@@ -134,7 +145,7 @@ function App() {
 					</Refine>
 				</DevtoolsProvider>
 			</RefineKbarProvider>
-		</BrowserRouter>
+		</BrowserRouter>)
 	);
 }
 

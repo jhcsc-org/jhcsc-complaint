@@ -314,6 +314,13 @@ export type Database = {
             foreignKeyName: "lupon_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "user_profile"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "lupon_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["user_id"]
           },
@@ -407,30 +414,46 @@ export type Database = {
       }
       users: {
         Row: {
+          address: string | null
+          barangay_id: string | null
           created_at: string | null
-          person_id: number | null
+          first_name: string
+          last_name: string | null
+          middle_name: string | null
           role_id: number | null
           updated_at: string | null
           user_id: string
-          username: string
         }
         Insert: {
+          address?: string | null
+          barangay_id?: string | null
           created_at?: string | null
-          person_id?: number | null
+          first_name: string
+          last_name?: string | null
+          middle_name?: string | null
           role_id?: number | null
           updated_at?: string | null
           user_id?: string
-          username: string
         }
         Update: {
+          address?: string | null
+          barangay_id?: string | null
           created_at?: string | null
-          person_id?: number | null
+          first_name?: string
+          last_name?: string | null
+          middle_name?: string | null
           role_id?: number | null
           updated_at?: string | null
           user_id?: string
-          username?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "users_barangay_id_fkey"
+            columns: ["barangay_id"]
+            isOneToOne: false
+            referencedRelation: "barangays"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "users_role_id_fkey"
             columns: ["role_id"]
@@ -465,6 +488,31 @@ export type Database = {
           status: Database["public"]["Enums"]["complaint_status"] | null
         }
         Relationships: []
+      }
+      user_profile: {
+        Row: {
+          address: string | null
+          barangay_name: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          last_name: string | null
+          middle_name: string | null
+          municipality_name: string | null
+          province_name: string | null
+          role_name: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
