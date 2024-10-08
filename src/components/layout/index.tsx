@@ -94,7 +94,7 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
         </div>
       </nav>
       <div className="flex-1 mx-4 border rounded-xl dark:border-border/25 border-border/50 bg-card lg:mx-0 lg:ml-64">
-        <main className="mx-auto py-14 max-w-7xl sm:px-6 lg:px-8">
+        <main className="mx-auto py-14 sm:px-6 lg:px-8">
           {children}
         </main>
       </div>
