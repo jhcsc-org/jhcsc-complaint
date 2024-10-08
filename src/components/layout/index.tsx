@@ -37,7 +37,7 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
   const full_name = `${user?.user_metadata.first_name} ${user?.user_metadata.middle_name ? `${user.user_metadata.middle_name} ` : ''}${user?.user_metadata.last_name}`;
   return (
     <div className="flex min-h-screen py-4 lg:pr-4">
-      <nav className="fixed top-0 left-0 justify-between hidden w-64 h-full py-5 lg:flex lg:flex-col">
+      <nav className="fixed top-0 left-0 justify-between hidden w-64 h-full py-5 lg:flex lg:flex-col bg-background">
         <div className="flex flex-col">
           <div className="flex items-center gap-2 px-6 pt-2 pb-4">
             <CircleDotDashedIcon className="w-6 h-6" />
