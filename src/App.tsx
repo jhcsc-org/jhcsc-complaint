@@ -14,7 +14,7 @@ import routerBindings, {
 	UnsavedChangesNotifier,
 } from "@refinedev/react-router-v6";
 import { dataProvider, liveProvider } from "@refinedev/supabase";
-import { BookCopyIcon, ScanSearchIcon, SendIcon } from "lucide-react";
+import { BookCopyIcon, MegaphoneIcon, ScanSearchIcon, SendIcon } from "lucide-react";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import "./App.css";
 import authProvider from "./authProvider";
@@ -25,6 +25,8 @@ import { FiledComplaints } from "./pages/admin/complains/list";
 import { ComplainCreate } from "./pages/citizens/complains/create";
 import { ComplainList } from "./pages/citizens/complains/list";
 import { ComplainShow } from "./pages/citizens/complains/show";
+import BarangayFiledComplaints from "./pages/lupon/complains/list";
+import { LuponComplainList } from "./pages/lupon/list";
 import { supabaseClient } from "./utility";
 
 function App() {
@@ -62,10 +64,29 @@ function App() {
 							list: "/admin/complaints",
 							identifier: "admin_complaints",
 							meta: {
-								label: "Manage Complaints",
+								label: "All Complaints Status",
 								icon: <BookCopyIcon className="w-5 h-5" />
 							},
-						}
+						},
+						{
+							name: "complaints",
+							list: "/lupon/manage",
+							identifier: "lupon_complaints_status",
+							meta: {
+								label: "Lupon Complaints Status",
+								icon: <BookCopyIcon className="w-5 h-5" />
+							},
+						},
+						{
+							name: "complaints",
+							list: "/lupon/complaints",
+							identifier: "lupon_complaints",
+							meta: {
+								label: "Barangay Complaints",
+								icon: <MegaphoneIcon className="w-5 h-5" />
+							},
+						},
+						
 						]}
 						options={{
 							syncWithLocation: true,
@@ -96,6 +117,14 @@ function App() {
 								</Route>
 								<Route path="/admin/complaints" element={<Outlet />} >
 									<Route index element={<FiledComplaints />} />
+									<Route path="show/:id" element={<ComplainShow />} />
+								</Route>
+								<Route path="/lupon/complaints" element={<Outlet />} >
+									<Route index element={<LuponComplainList />} />
+									<Route path="show/:id" element={<ComplainShow />} />
+								</Route>
+								<Route path="/lupon/manage" element={<Outlet />} >
+									<Route index element={<BarangayFiledComplaints />} />
 									<Route path="show/:id" element={<ComplainShow />} />
 								</Route>
 								<Route path="*" element={<ErrorComponent />} />
