@@ -1,8 +1,4 @@
-import {
-	Authenticated,
-	ErrorComponent,
-	Refine
-} from "@refinedev/core";
+import { Authenticated, ErrorComponent, Refine } from "@refinedev/core";
 import { DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
@@ -29,7 +25,7 @@ import { supabaseClient } from "./utility";
 
 function App() {
 	return (
-		(<BrowserRouter>
+		<BrowserRouter>
 			<Toaster richColors expand visibleToasts={3} />
 			<RefineKbarProvider>
 				<DevtoolsProvider>
@@ -38,34 +34,43 @@ function App() {
 						liveProvider={liveProvider(supabaseClient)}
 						authProvider={authProvider}
 						routerProvider={routerBindings}
-						resources={[{
-							name: "complaints",
-							list: "/",
-							create: "/create",
-							edit: "/edit/:id",
-							show: "/show/:id",
-							meta: {
-								label: "Track Complaint",
-								icon: <ScanSearchIcon className="w-5 h-5" />,
+						resources={[
+							{
+								name: "complaints",
+								list: "/",
+								create: "/create",
+								edit: "/edit/:id",
+								show: "/show/:id",
+								meta: {
+									label: "Track Complaint",
+									icon: <ScanSearchIcon className="w-5 h-5" />,
+								},
 							},
-						}, {
-							name: "complaints",
-							list: "/create",
-							identifier: "complaint_id",
-							meta: {
-								label: "File Complaint",
-								icon: <SendIcon className="w-5 h-5" />
+							{
+								name: "complaints",
+								list: "/create",
+								identifier: "complaint_id",
+								meta: {
+									label: "File Complaint",
+									icon: <SendIcon className="w-5 h-5" />,
+								},
 							},
-						},
-						{
-							name: "complaints",
-							list: "/admin/complaints",
-							identifier: "admin_complaints",
-							meta: {
-								label: "Manage Complaints",
-								icon: <BookCopyIcon className="w-5 h-5" />
+							{
+								name: "complaints",
+								list: "/admin/complaints",
+								identifier: "admin_complaints",
+								meta: {
+									label: "Manage Complaints",
+									icon: <BookCopyIcon className="w-5 h-5" />,
+								},
 							},
-						}
+							{
+								name: "user_profile",
+								meta: {
+									hide: true,
+									idColumnName: "user_id",
+								},
+							},
 						]}
 						options={{
 							syncWithLocation: true,
@@ -94,7 +99,7 @@ function App() {
 									<Route path="edit/:id" element={<HeadlessInferencer />} />
 									<Route path="show/:id" element={<ComplainShow />} />
 								</Route>
-								<Route path="/admin/complaints" element={<Outlet />} >
+								<Route path="/admin/complaints" element={<Outlet />}>
 									<Route index element={<FiledComplaints />} />
 									<Route path="show/:id" element={<ComplainShow />} />
 								</Route>
@@ -115,11 +120,7 @@ function App() {
 									element={
 										<AuthPage
 											type="login"
-											renderContent={(content) => (
-												<div>
-													{content}
-												</div>
-											)}
+											renderContent={(content) => <div>{content}</div>}
 										/>
 									}
 								/>
@@ -140,7 +141,7 @@ function App() {
 					</Refine>
 				</DevtoolsProvider>
 			</RefineKbarProvider>
-		</BrowserRouter>)
+		</BrowserRouter>
 	);
 }
 
