@@ -9,504 +9,594 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      barangays: {
+      amenities: {
         Row: {
-          id: string
-          municipality_id: number | null
+          id: number
           name: string
         }
         Insert: {
-          id?: string
-          municipality_id?: number | null
+          id?: number
           name: string
         }
         Update: {
-          id?: string
-          municipality_id?: number | null
+          id?: number
           name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "barangays_municipality_id_fkey"
-            columns: ["municipality_id"]
-            isOneToOne: false
-            referencedRelation: "municipalities"
-            referencedColumns: ["municipality_id"]
-          },
-        ]
-      }
-      complaint_documents: {
-        Row: {
-          complaint_id: string | null
-          created_at: string | null
-          document_id: string
-          file_name: string
-          file_path: string
-          uploaded_at: string | null
-          uploaded_by: string | null
-        }
-        Insert: {
-          complaint_id?: string | null
-          created_at?: string | null
-          document_id?: string
-          file_name: string
-          file_path: string
-          uploaded_at?: string | null
-          uploaded_by?: string | null
-        }
-        Update: {
-          complaint_id?: string | null
-          created_at?: string | null
-          document_id?: string
-          file_name?: string
-          file_path?: string
-          uploaded_at?: string | null
-          uploaded_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "complaint_documents_complaint_id_fkey"
-            columns: ["complaint_id"]
-            isOneToOne: false
-            referencedRelation: "complaint_view"
-            referencedColumns: ["complaint_id"]
-          },
-          {
-            foreignKeyName: "complaint_documents_complaint_id_fkey"
-            columns: ["complaint_id"]
-            isOneToOne: false
-            referencedRelation: "complaints"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "complaint_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      complaint_history: {
-        Row: {
-          action_by: string | null
-          action_date: string | null
-          action_taken: string
-          complaint_id: string | null
-          created_at: string | null
-          history_id: string
-        }
-        Insert: {
-          action_by?: string | null
-          action_date?: string | null
-          action_taken: string
-          complaint_id?: string | null
-          created_at?: string | null
-          history_id?: string
-        }
-        Update: {
-          action_by?: string | null
-          action_date?: string | null
-          action_taken?: string
-          complaint_id?: string | null
-          created_at?: string | null
-          history_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "complaint_history_action_by_fkey"
-            columns: ["action_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "complaint_history_complaint_id_fkey"
-            columns: ["complaint_id"]
-            isOneToOne: false
-            referencedRelation: "complaint_view"
-            referencedColumns: ["complaint_id"]
-          },
-          {
-            foreignKeyName: "complaint_history_complaint_id_fkey"
-            columns: ["complaint_id"]
-            isOneToOne: false
-            referencedRelation: "complaints"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      complaint_participants: {
-        Row: {
-          added_by: string | null
-          complaint_id: string | null
-          created_at: string | null
-          participant_id: string
-          person_id: string | null
-          role: string
-          updated_at: string | null
-        }
-        Insert: {
-          added_by?: string | null
-          complaint_id?: string | null
-          created_at?: string | null
-          participant_id?: string
-          person_id?: string | null
-          role: string
-          updated_at?: string | null
-        }
-        Update: {
-          added_by?: string | null
-          complaint_id?: string | null
-          created_at?: string | null
-          participant_id?: string
-          person_id?: string | null
-          role?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "complaint_participants_added_by_fkey"
-            columns: ["added_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "complaint_participants_complaint_id_fkey"
-            columns: ["complaint_id"]
-            isOneToOne: false
-            referencedRelation: "complaint_view"
-            referencedColumns: ["complaint_id"]
-          },
-          {
-            foreignKeyName: "complaint_participants_complaint_id_fkey"
-            columns: ["complaint_id"]
-            isOneToOne: false
-            referencedRelation: "complaints"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "complaint_participants_person_id_fkey"
-            columns: ["person_id"]
-            isOneToOne: false
-            referencedRelation: "people"
-            referencedColumns: ["person_id"]
-          },
-        ]
-      }
-      complaint_types: {
-        Row: {
-          complaint_type_id: string
-          description: string
-        }
-        Insert: {
-          complaint_type_id?: string
-          description: string
-        }
-        Update: {
-          complaint_type_id?: string
-          description?: string
         }
         Relationships: []
       }
-      complaints: {
+      audit_logs: {
         Row: {
-          barangay_id: string | null
-          case_number: string | null
-          case_title: string
-          complaint_type_id: string | null
-          created_at: string | null
-          date_filed: string
-          description: string
-          filed_by: string | null
-          id: string
-          resolution_date: string | null
-          status: Database["public"]["Enums"]["complaint_status"]
-          updated_at: string | null
+          changed_at: string
+          changed_by: string | null
+          changed_data: string | null
+          id: number
+          operation: string
+          record_id: number
+          table_name: string
         }
         Insert: {
-          barangay_id?: string | null
-          case_number?: string | null
-          case_title: string
-          complaint_type_id?: string | null
-          created_at?: string | null
-          date_filed?: string
-          description: string
-          filed_by?: string | null
-          id?: string
-          resolution_date?: string | null
-          status?: Database["public"]["Enums"]["complaint_status"]
-          updated_at?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          changed_data?: string | null
+          id?: number
+          operation: string
+          record_id: number
+          table_name: string
         }
         Update: {
-          barangay_id?: string | null
-          case_number?: string | null
-          case_title?: string
-          complaint_type_id?: string | null
-          created_at?: string | null
-          date_filed?: string
-          description?: string
-          filed_by?: string | null
-          id?: string
-          resolution_date?: string | null
-          status?: Database["public"]["Enums"]["complaint_status"]
-          updated_at?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          changed_data?: string | null
+          id?: number
+          operation?: string
+          record_id?: number
+          table_name?: string
         }
         Relationships: [
           {
-            foreignKeyName: "complaints_barangay_id_fkey"
-            columns: ["barangay_id"]
+            foreignKeyName: "audit_logs_changed_by_fkey"
+            columns: ["changed_by"]
             isOneToOne: false
-            referencedRelation: "barangays"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "complaints_complaint_type_id_fkey"
-            columns: ["complaint_type_id"]
+            foreignKeyName: "audit_logs_changed_by_fkey"
+            columns: ["changed_by"]
             isOneToOne: false
-            referencedRelation: "complaint_types"
-            referencedColumns: ["complaint_type_id"]
+            referencedRelation: "vw_user"
+            referencedColumns: ["user_id"]
           },
+        ]
+      }
+      booking_schedule: {
+        Row: {
+          booking_id: number
+          date: string
+          end_time: string
+          id: number
+          start_time: string
+        }
+        Insert: {
+          booking_id: number
+          date: string
+          end_time: string
+          id?: never
+          start_time: string
+        }
+        Update: {
+          booking_id?: number
+          date?: string
+          end_time?: string
+          id?: never
+          start_time?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "complaints_filed_by_fkey"
-            columns: ["filed_by"]
+            foreignKeyName: "booking_schedule_booking_id_fkey"
+            columns: ["booking_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
         ]
       }
-      lupon_members: {
+      booking_statuses: {
         Row: {
-          barangay_id: string | null
+          id: number
+          status: string
+        }
+        Insert: {
+          id?: number
+          status: string
+        }
+        Update: {
+          id?: number
+          status?: string
+        }
+        Relationships: []
+      }
+      bookings: {
+        Row: {
+          booking_status_id: number | null
           created_at: string | null
-          lupon_member_id: string
-          position: string | null
+          id: number
+          is_deleted: boolean
+          payment_status_id: number | null
+          total_amount: number | null
           updated_at: string | null
           user_id: string | null
+          venue_id: number
         }
         Insert: {
-          barangay_id?: string | null
+          booking_status_id?: number | null
           created_at?: string | null
-          lupon_member_id?: string
-          position?: string | null
+          id?: number
+          is_deleted?: boolean
+          payment_status_id?: number | null
+          total_amount?: number | null
           updated_at?: string | null
           user_id?: string | null
+          venue_id: number
         }
         Update: {
-          barangay_id?: string | null
+          booking_status_id?: number | null
           created_at?: string | null
-          lupon_member_id?: string
-          position?: string | null
+          id?: number
+          is_deleted?: boolean
+          payment_status_id?: number | null
+          total_amount?: number | null
           updated_at?: string | null
           user_id?: string | null
+          venue_id?: number
         }
         Relationships: [
           {
-            foreignKeyName: "lupon_members_barangay_id_fkey"
-            columns: ["barangay_id"]
+            foreignKeyName: "bookings_booking_status_id_fkey"
+            columns: ["booking_status_id"]
             isOneToOne: false
-            referencedRelation: "barangays"
+            referencedRelation: "booking_statuses"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lupon_members_user_id_fkey"
+            foreignKeyName: "bookings_payment_status_id_fkey"
+            columns: ["payment_status_id"]
+            isOneToOne: false
+            referencedRelation: "payment_statuses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "user_profile"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_user"
             referencedColumns: ["user_id"]
           },
           {
-            foreignKeyName: "lupon_members_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "bookings_venue_id_fkey"
+            columns: ["venue_id"]
             isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["user_id"]
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
           },
-        ]
-      }
-      municipalities: {
-        Row: {
-          municipality_id: number
-          name: string
-          province_id: number | null
-        }
-        Insert: {
-          municipality_id?: never
-          name: string
-          province_id?: number | null
-        }
-        Update: {
-          municipality_id?: never
-          name?: string
-          province_id?: number | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "municipalities_province_id_fkey"
-            columns: ["province_id"]
+            foreignKeyName: "bookings_venue_id_fkey"
+            columns: ["venue_id"]
             isOneToOne: false
-            referencedRelation: "provinces"
-            referencedColumns: ["province_id"]
+            referencedRelation: "vw_manager"
+            referencedColumns: ["venue_id"]
           },
         ]
       }
-      people: {
+      lgu: {
         Row: {
           address: string | null
           contact_info: string | null
-          created_at: string | null
-          first_name: string
-          last_name: string
-          person_id: string
-          updated_at: string | null
+          id: number
+          name: string
         }
         Insert: {
           address?: string | null
           contact_info?: string | null
-          created_at?: string | null
-          first_name: string
-          last_name: string
-          person_id?: string
-          updated_at?: string | null
+          id?: number
+          name: string
         }
         Update: {
           address?: string | null
           contact_info?: string | null
-          created_at?: string | null
-          first_name?: string
-          last_name?: string
-          person_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      provinces: {
-        Row: {
-          name: string
-          province_id: number
-        }
-        Insert: {
-          name: string
-          province_id?: never
-        }
-        Update: {
+          id?: number
           name?: string
-          province_id?: never
         }
         Relationships: []
       }
-      user_roles: {
+      notification_types: {
         Row: {
-          role_id: number
-          role_name: string
+          id: number
+          type: string
         }
         Insert: {
-          role_id?: never
-          role_name: string
+          id?: number
+          type: string
         }
         Update: {
-          role_id?: never
-          role_name?: string
+          id?: number
+          type?: string
         }
         Relationships: []
       }
-      users: {
+      notifications: {
         Row: {
-          address: string | null
-          barangay_id: string | null
-          created_at: string | null
-          first_name: string
-          last_name: string | null
-          middle_name: string | null
-          role_id: number | null
-          updated_at: string | null
-          user_id: string
+          created_at: string
+          id: number
+          is_deleted: boolean
+          is_read: boolean
+          message: string
+          notification_type_id: number
+          recipient_id: string
+          related_booking_id: number | null
         }
         Insert: {
-          address?: string | null
-          barangay_id?: string | null
-          created_at?: string | null
-          first_name: string
-          last_name?: string | null
-          middle_name?: string | null
-          role_id?: number | null
-          updated_at?: string | null
-          user_id?: string
+          created_at?: string
+          id?: number
+          is_deleted?: boolean
+          is_read?: boolean
+          message: string
+          notification_type_id: number
+          recipient_id: string
+          related_booking_id?: number | null
         }
         Update: {
-          address?: string | null
-          barangay_id?: string | null
-          created_at?: string | null
-          first_name?: string
-          last_name?: string | null
-          middle_name?: string | null
-          role_id?: number | null
-          updated_at?: string | null
-          user_id?: string
+          created_at?: string
+          id?: number
+          is_deleted?: boolean
+          is_read?: boolean
+          message?: string
+          notification_type_id?: number
+          recipient_id?: string
+          related_booking_id?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "users_barangay_id_fkey"
-            columns: ["barangay_id"]
+            foreignKeyName: "notifications_notification_type_id_fkey"
+            columns: ["notification_type_id"]
             isOneToOne: false
-            referencedRelation: "barangays"
+            referencedRelation: "notification_types"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "users_role_id_fkey"
-            columns: ["role_id"]
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
             isOneToOne: false
-            referencedRelation: "user_roles"
-            referencedColumns: ["role_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "users_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "vw_user"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notifications_related_booking_id_fkey"
+            columns: ["related_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_modes: {
+        Row: {
+          id: number
+          mode: string
+        }
+        Insert: {
+          id?: number
+          mode: string
+        }
+        Update: {
+          id?: number
+          mode?: string
+        }
+        Relationships: []
+      }
+      payment_statuses: {
+        Row: {
+          id: number
+          status: string
+        }
+        Insert: {
+          id?: number
+          status: string
+        }
+        Update: {
+          id?: number
+          status?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          booking_id: number
+          confirmation_status: boolean
+          created_at: string
+          currency_code: string
+          id: number
+          is_deleted: boolean
+          is_down_payment: boolean
+          payment_date: string
+          payment_mode_id: number
+          transaction_reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          booking_id: number
+          confirmation_status?: boolean
+          created_at?: string
+          currency_code?: string
+          id?: number
+          is_deleted?: boolean
+          is_down_payment?: boolean
+          payment_date?: string
+          payment_mode_id: number
+          transaction_reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: number
+          confirmation_status?: boolean
+          created_at?: string
+          currency_code?: string
+          id?: number
+          is_deleted?: boolean
+          is_down_payment?: boolean
+          payment_date?: string
+          payment_mode_id?: number
+          transaction_reference?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_payment_mode_id_fkey"
+            columns: ["payment_mode_id"]
+            isOneToOne: false
+            referencedRelation: "payment_modes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          affiliation: string | null
+          created_at: string
+          id: string
+          is_deleted: boolean
+          name: string | null
+          phone_number: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          affiliation?: string | null
+          created_at?: string
+          id: string
+          is_deleted?: boolean
+          name?: string | null
+          phone_number?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          affiliation?: string | null
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          name?: string | null
+          phone_number?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
             isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
       }
-    }
-    Views: {
-      complaint_view: {
+      venue_amenities: {
         Row: {
-          barangay_name: string | null
-          case_number: string | null
-          case_title: string | null
-          complaint_description: string | null
-          complaint_id: string | null
-          complaint_type: string | null
-          date_filed: string | null
-          documents: Json | null
-          history: Json | null
-          participants: Json | null
-          resolution_date: string | null
-          status: Database["public"]["Enums"]["complaint_status"] | null
+          amenity_id: number
+          venue_id: number
         }
-        Relationships: []
-      }
-      user_profile: {
-        Row: {
-          address: string | null
-          barangay_name: string | null
-          created_at: string | null
-          email: string | null
-          first_name: string | null
-          last_name: string | null
-          middle_name: string | null
-          municipality_name: string | null
-          province_name: string | null
-          role_name: string | null
-          updated_at: string | null
-          user_id: string | null
+        Insert: {
+          amenity_id: number
+          venue_id: number
+        }
+        Update: {
+          amenity_id?: number
+          venue_id?: number
         }
         Relationships: [
           {
-            foreignKeyName: "users_user_id_fkey"
+            foreignKeyName: "venue_amenities_amenity_id_fkey"
+            columns: ["amenity_id"]
+            isOneToOne: false
+            referencedRelation: "amenities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_amenities_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_amenities_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "vw_manager"
+            referencedColumns: ["venue_id"]
+          },
+        ]
+      }
+      venue_types: {
+        Row: {
+          id: number
+          name: string
+        }
+        Insert: {
+          id?: number
+          name: string
+        }
+        Update: {
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      venues: {
+        Row: {
+          created_at: string
+          id: number
+          is_deleted: boolean
+          is_paid: boolean
+          lgu_id: number | null
+          location: string
+          manager_id: string
+          name: string
+          rate: number | null
+          updated_at: string
+          venue_photo: string | null
+          venue_type_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          is_deleted?: boolean
+          is_paid?: boolean
+          lgu_id?: number | null
+          location: string
+          manager_id: string
+          name: string
+          rate?: number | null
+          updated_at?: string
+          venue_photo?: string | null
+          venue_type_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          is_deleted?: boolean
+          is_paid?: boolean
+          lgu_id?: number | null
+          location?: string
+          manager_id?: string
+          name?: string
+          rate?: number | null
+          updated_at?: string
+          venue_photo?: string | null
+          venue_type_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venues_lgu_id_fkey"
+            columns: ["lgu_id"]
+            isOneToOne: false
+            referencedRelation: "lgu"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venues_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venues_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "vw_user"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "venues_venue_type_id_fkey"
+            columns: ["venue_type_id"]
+            isOneToOne: false
+            referencedRelation: "venue_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      vw_manager: {
+        Row: {
+          created_at: string | null
+          is_paid: boolean | null
+          location: string | null
+          manager_name: string | null
+          rate: number | null
+          updated_at: string | null
+          venue_id: number | null
+          venue_name: string | null
+          venue_type: string | null
+        }
+        Relationships: []
+      }
+      vw_user: {
+        Row: {
+          affiliation: string | null
+          created_at: string | null
+          name: string | null
+          phone_number: string | null
+          role: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          affiliation?: string | null
+          created_at?: string | null
+          name?: string | null
+          phone_number?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          affiliation?: string | null
+          created_at?: string | null
+          name?: string | null
+          phone_number?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "users"
@@ -519,8 +609,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      complaint_status: "PENDING" | "IN_PROCESS" | "RESOLVED" | "DISMISSED"
-      COMPLAINT_STATUS: "PENDING" | "IN_PROCESS" | "RESOLVED" | "DISMISSED"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never

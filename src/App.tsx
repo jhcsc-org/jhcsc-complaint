@@ -46,7 +46,7 @@ function App() {
 							show: "/show/:id",
 							meta: {
 								label: "Track Complaint",
-								icon: <ScanSearchIcon className="w-5 h-5" />
+								icon: <ScanSearchIcon className="w-5 h-5" />,
 							},
 						}, {
 							name: "complaints",
