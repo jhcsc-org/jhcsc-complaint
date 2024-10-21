@@ -7,10 +7,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TableType } from "@/types/dev.types";
-import { useGetIdentity, useList, useLogout, useMenu, useNavigation } from "@refinedev/core";
+import { BaseKey, useGetIdentity, useList, useLogout, useMenu, useNavigation, useOne } from "@refinedev/core";
 import { User } from "@supabase/supabase-js";
 import { CircleDotDashedIcon } from "lucide-react";
-import type { PropsWithChildren } from "react";
+import { type PropsWithChildren } from "react";
 import { NavLink } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Separator } from "../ui/separator";
@@ -34,7 +34,17 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
     },
     liveMode: "auto",
   });
+  const userId = user?.id;
+  const { data: userRole, isLoading: isUserRoleLoading } = useOne<TableType<"user_profile"> & BaseKey>({
+    id: userId,
+    resource: "user_profile",
+    queryOptions: {
+      enabled: !!userId,
+    }
+  });
+
   const full_name = `${user?.user_metadata.first_name} ${user?.user_metadata.middle_name ? `${user.user_metadata.middle_name} ` : ''}${user?.user_metadata.last_name}`;
+
   return (
     <div className="flex min-h-screen py-4 lg:pr-4">
       <nav className="fixed top-0 left-0 justify-between hidden w-64 h-full py-5 lg:flex lg:flex-col bg-background">
@@ -45,14 +55,19 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
           </div>
           <Separator />
           <ul className="px-4 pb-4 mt-4">
-            {menuItems.map((item) => (
-              <NavLink key={item.label} className="my-6 text-sm font-medium" to={item.route ?? "/"} >
-                <li className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted-foreground/25">
-                  {item.icon}
-                  {item.label}
-                </li>
-              </NavLink>
-            ))}
+            {!isUserRoleLoading && menuItems.map((item) => {
+              if (item.label === "Manage Complaints" && (userRole?.data.role_name === 'admin' ||userRole?.data.role_name === 'lupon')) {
+                return null; 
+              }
+              return (
+                <NavLink key={item.label} className="my-6 text-sm font-medium" to={item.route ?? "/"} >
+                  <li className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted-foreground/25">
+                    {item.icon}
+                    {item.label}
+                  </li>
+                </NavLink>
+              );
+            })}
           </ul>
           <Separator />
           <ul className="px-4 mt-4">
