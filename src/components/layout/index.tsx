@@ -7,33 +7,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TableType } from "@/types/dev.types";
-import { BaseKey, useGetIdentity, useList, useLogout, useMenu, useNavigation, useOne } from "@refinedev/core";
+import { BaseKey, useGetIdentity, useLogout, useMenu, useOne } from "@refinedev/core";
 import { User } from "@supabase/supabase-js";
 import { CircleDotDashedIcon } from "lucide-react";
-import { useEffect, useState, type PropsWithChildren } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useMemo, useState, type PropsWithChildren } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Separator } from "../ui/separator";
+
+const roleRoutes: Record<string, string[]> = {
+  citizen: ['/', '/create'],
+  lupon_member: ['/lupon/manage', '/lupon/complaints', '/lupon/complaints/show/', '/lupon/citizens'],
+  admin: ['/admin/manage', '/admin/complaints'],
+};
 
 export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
   const { mutate: logout } = useLogout();
   const { menuItems } = useMenu();
   const { data: user } = useGetIdentity<User>();
-  const { show } = useNavigation();
-  const { data: recentComplaints } = useList<TableType<"complaints">>({
-    resource: "complaints",
-    filters: [
-      {
-        field: "filed_by",
-        operator: "eq",
-        value: user?.id,
-      },
-    ],
-    pagination: {
-      pageSize: 5,
-    },
-    liveMode: "auto",
-  });
   const userId = user?.id;
   const { data: userRole, isLoading: isUserRoleLoading } = useOne<TableType<"user_profile"> & BaseKey>({
     id: userId,
@@ -46,24 +37,29 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
   const [role, setRole] = useState<string | undefined | null>();
   const full_name = `${user?.user_metadata.first_name} ${user?.user_metadata.middle_name ? `${user.user_metadata.middle_name} ` : ''}${user?.user_metadata.last_name}`;
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const filteredMenuItems = useMemo(() => {
+    return menuItems.filter((item) => roleRoutes[role!]?.includes(item.route || ""));
+  }, [menuItems, role]);
+
+  useEffect(() => {
+    if (
+      role &&
+      !roleRoutes[role]?.includes(location.pathname) &&
+      !location.pathname.startsWith('/lupon/show/')
+    ) {
+      const defaultRoute = roleRoutes[role][0];
+      navigate(defaultRoute);
+    }
+  }, [role, location.pathname, navigate, roleRoutes]);
+
   useEffect(() => {
     if (userRole !== undefined) {
       setRole(userRole.data.role_name)
     }
   }, [userRole?.data])
-
-  const filteredMenuItems = menuItems.filter((item) => {
-    if (role === 'citizen') {
-      return item.route === '/' || item.route === '/create';
-    }
-    if (role === 'lupon_member') {
-      return item.route === '/lupon/manage' || item.route === '/lupon/complaints';
-    }
-    if (role === 'admin') {
-      return item.route === '/admin/manage' || item.route === '/admin/complaints';
-    }
-    return false;
-  });
 
   return (
     <div className="flex min-h-screen py-4 lg:pr-4">
@@ -82,17 +78,6 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
                   {item.label}
                 </li>
               </NavLink>
-            ))}
-          </ul>
-          <Separator />
-          <ul className="px-4 mt-4">
-            <h1 className="flex items-center gap-2 px-2 py-2 text-xs font-bold font-border">Recent Complaints</h1>
-            {recentComplaints?.data?.map((complaint) => (
-              <button type="button" key={complaint.id} onClick={() => show("complaints", complaint.id)}>
-                <li className="flex items-center gap-2 px-2 py-2 text-sm rounded-md hover:bg-muted-foreground/25">
-                  {complaint.case_title}
-                </li>
-              </button>
             ))}
           </ul>
         </div>

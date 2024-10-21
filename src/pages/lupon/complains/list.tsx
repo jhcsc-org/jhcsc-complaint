@@ -1,13 +1,16 @@
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TableType } from "@/types/dev.types";
 import {
     DndContext,
@@ -31,16 +34,14 @@ import { useGetIdentity, useList, useUpdate } from "@refinedev/core";
 import { User } from "@supabase/supabase-js";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpDownIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { ComplaintItem } from "./ComplaintItem";
 import { SortableComplaint } from "./SortableComplaint";
 
-// Define the possible complaint statuses
 type ComplaintStatus = "PENDING" | "IN_PROCESS" | "RESOLVED" | "DISMISSED";
 
-// Define the order and labels of status columns
 const statusColumns: ComplaintStatus[] = [
     "PENDING",
     "IN_PROCESS",
@@ -48,7 +49,6 @@ const statusColumns: ComplaintStatus[] = [
     "DISMISSED",
 ];
 
-// Map statuses to their corresponding colors
 const statusColors: Record<ComplaintStatus, string> = {
     PENDING: "bg-yellow-600",
     IN_PROCESS: "bg-blue-600",
@@ -56,9 +56,8 @@ const statusColors: Record<ComplaintStatus, string> = {
     DISMISSED: "bg-gray-600",
 };
 
-// Skeleton component displayed while data is loading
 const KanbanSkeleton: React.FC = () => (
-    <motion.div 
+    <motion.div
         className="flex gap-4 p-4 overflow-x-auto flex-nowrap"
         initial={{ opacity: 0, filter: "blur(10px)" }}
         animate={{ opacity: 1, filter: "blur(0px)" }}
@@ -91,11 +90,10 @@ const KanbanSkeleton: React.FC = () => (
 
 type SortOrder = "asc" | "desc" | "none";
 
-// Main component for displaying filed complaints in a kanban board
 export const BarangayFiledComplaints: React.FC = () => {
     const { data: userData } = useGetIdentity<User>();
-    // Fetch complaints data
-    const { data, isLoading, refetch } = useList<TableType<"complaints">>({
+
+    const { data, isLoading } = useList<TableType<"complaints">>({
         resource: "complaints",
         pagination: { mode: "off" },
         liveMode: "auto",
@@ -103,20 +101,16 @@ export const BarangayFiledComplaints: React.FC = () => {
             {
                 field: "barangay_id",
                 value: userData?.user_metadata.barangay_id,
-                operator: "eq"
-            }
+                operator: "eq",
+            },
         ],
     });
 
-    // Mutation hook for updating a complaint
     const { mutate: updateComplaint } = useUpdate();
 
-    // State to track the currently dragged item's ID
     const [activeId, setActiveId] = useState<string | null>(null);
-    // State to track the open state of the alert dialog
     const [open, setOpen] = useState(false);
 
-    // Initialize sensors for drag-and-drop functionality
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -124,337 +118,285 @@ export const BarangayFiledComplaints: React.FC = () => {
         })
     );
 
-    // State to hold complaints grouped by status
-    const [complaintsByStatus, setComplaintsByStatus] = useState<
-        Record<ComplaintStatus, TableType<"complaints">[]>
-    >(() => {
-        // Initialize with empty arrays for each status
-        const initialState = {} as Record<ComplaintStatus, TableType<"complaints">[]>;
-        for (const status of statusColumns) {
-            initialState[status] = [];
-        }
-        return initialState;
-    });
-
-    // Update complaintsByStatus whenever the data changes
-    useEffect(() => {
-        if (data?.data) {
-            // Group the complaints by their status
-            const grouped = statusColumns.reduce((acc, status) => {
-                acc[status] = data.data.filter(
-                    (complaint) => complaint.status === status
-                );
+    const complaintsByStatus = useMemo(() => {
+        if (!data?.data) {
+            return statusColumns.reduce((acc, status) => {
+                acc[status] = [];
                 return acc;
             }, {} as Record<ComplaintStatus, TableType<"complaints">[]>);
-            setComplaintsByStatus(grouped);
         }
+
+        return statusColumns.reduce((acc, status) => {
+            acc[status] = data.data.filter(
+                (complaint) => complaint.status === status
+            );
+            return acc;
+        }, {} as Record<ComplaintStatus, TableType<"complaints">[]>);
     }, [data]);
 
-    // Helper function to find the container (status column) of a given ID
-    const findContainer = (id: string): ComplaintStatus | null => {
-        if (statusColumns.includes(id as ComplaintStatus)) {
-            return id as ComplaintStatus;
-        }
-
-        for (const status of statusColumns) {
-            const containerItems = complaintsByStatus[status];
-            if (containerItems.some((item) => item.id === id)) {
-                return status;
+    const findContainer = useCallback(
+        (id: string): ComplaintStatus | null => {
+            if (statusColumns.includes(id as ComplaintStatus)) {
+                return id as ComplaintStatus;
             }
-        }
 
-        return null;
-    };
+            for (const status of statusColumns) {
+                const containerItems = complaintsByStatus[status];
+                if (containerItems.some((item) => item.id === id)) {
+                    return status;
+                }
+            }
 
-    // New state for storing the drag event details
-    const [dragEventDetails, setDragEventDetails] = useState<DragEndEvent | null>(null);
+            return null;
+        },
+        [complaintsByStatus]
+    );
 
-    // Handler for when dragging starts
-    const handleDragStart = (event: DragStartEvent) => {
+    const [dragEventDetails, setDragEventDetails] =
+        useState<DragEndEvent | null>(null);
+
+    const handleDragStart = useCallback((event: DragStartEvent) => {
         const { active } = event;
         setActiveId(active.id as string);
-    };
+    }, []);
 
-    // Handler for when dragging ends
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        setActiveId(null);
-
-        if (!over) return;
-
-        const activeContainer = findContainer(active.id as string);
-        const overContainer = findContainer(over.id as string);
-
-        if (!activeContainer || !overContainer || activeContainer === overContainer) {
-            return;
-        }
-
-        // Only open the dialog if transferring to DISMISSED status
-        if (overContainer === "DISMISSED") {
-            setDragEventDetails(event);
-            setTimeout(() => {
-                setOpen(true);
-            }, 250);
-        } else {
-            // If not transferring to DISMISSED, update immediately
-            handleStatusUpdate(active.id as string, activeContainer, overContainer);
-        }
-    };
-
-    // Function to handle the status update
-    const handleStatusUpdate = (id: string, fromStatus: ComplaintStatus, toStatus: ComplaintStatus) => {
-        setComplaintsByStatus((prev) => {
-            const activeItems = prev[fromStatus];
-            const overItems = prev[toStatus];
-            const activeIndex = activeItems.findIndex((item) => item.id === id);
-            const overIndex = overItems.length;
-
-            return {
-                ...prev,
-                [fromStatus]: [
-                    ...prev[fromStatus].filter((item) => item.id !== id),
-                ],
-                [toStatus]: [
-                    ...prev[toStatus].slice(0, overIndex),
-                    activeItems[activeIndex],
-                    ...prev[toStatus].slice(overIndex),
-                ],
-            };
-        });
-
-        // Update the complaint in the database
-        updateComplaint(
-            {
-                resource: "complaints",
-                id: id,
-                values: { status: toStatus },
-                mutationMode: "optimistic",
-            },
-            {
-                onError: (error) => {
-                    toast.error('Failed to update complaint.', {
-                        description: error.message,
-                    });
-                    // Revert the state update if the database update fails
-                    setComplaintsByStatus((prev) => {
-                        const revertedActiveItems = [...prev[fromStatus],
-                        prev[toStatus].find((item) => item.id === id)
-                        ];
-                        const revertedOverItems = prev[toStatus]
-                            .filter((item) => item.id !== id);
-
-                        return {
-                            ...prev,
-                            [fromStatus]: revertedActiveItems,
-                            [toStatus]: revertedOverItems,
-                        };
-                    });
+    const handleStatusUpdate = useCallback(
+        (id: string, toStatus: ComplaintStatus) => {
+            updateComplaint(
+                {
+                    resource: "complaints",
+                    id: id,
+                    values: { status: toStatus },
+                    mutationMode: "optimistic",
                 },
-                onSuccess: (data) => {
-                    toast.success(`Case ${data.data.case_number} status updated successfully.`, {
-                        description: data.data.case_title,
-                    });
-                },
+                {
+                    onError: (error) => {
+                        toast.error("Failed to update complaint.", {
+                            description: error.message,
+                        });
+                    },
+                    onSuccess: (data) => {
+                        toast.success(
+                            `Case ${data.data.case_number} status updated successfully.`,
+                            {
+                                description: data.data.case_title,
+                            }
+                        );
+                    },
+                }
+            );
+        },
+        [updateComplaint]
+    );
+
+    const handleDragEnd = useCallback(
+        (event: DragEndEvent) => {
+            const { active, over } = event;
+            setActiveId(null);
+
+            if (!over) return;
+
+            const activeContainer = findContainer(active.id as string);
+            const overContainer = findContainer(over.id as string);
+
+            if (
+                !activeContainer ||
+                !overContainer ||
+                activeContainer === overContainer
+            ) {
+                return;
             }
-        );
-    };
 
-    // Function to handle the confirmation and update the complaint
-    const handleConfirmUpdate = () => {
+            if (overContainer === "DISMISSED") {
+                setDragEventDetails(event);
+                setTimeout(() => {
+                    setOpen(true);
+                }, 250);
+            } else {
+                handleStatusUpdate(active.id as string, overContainer);
+            }
+        },
+        [findContainer, handleStatusUpdate]
+    );
+
+    const handleConfirmUpdate = useCallback(() => {
         if (!dragEventDetails) return;
 
-        const { active, over } = dragEventDetails || {};
+        const { active, over } = dragEventDetails;
         if (!active || !over) return;
 
-        const activeContainer = findContainer(active.id as string);
         const overContainer = findContainer(over.id as string);
-        if (!activeContainer || !overContainer) return;
+        if (!overContainer) return;
 
-        handleStatusUpdate(active.id as string, activeContainer, overContainer);
+        handleStatusUpdate(active.id as string, overContainer);
 
-        // Reset the dragEventDetails and close the dialog
         setDragEventDetails(null);
         setOpen(false);
-    };
+    }, [dragEventDetails, findContainer, handleStatusUpdate]);
 
-    const [activeTab, setActiveTab] = useState<ComplaintStatus>("PENDING");
+    const [sortOrders, setSortOrders] = useState<Record<ComplaintStatus, SortOrder>>(
+        () =>
+            statusColumns.reduce((acc, status) => {
+                acc[status] = "none";
+                return acc;
+            }, {} as Record<ComplaintStatus, SortOrder>)
+    );
 
-    const [sortOrders, setSortOrders] = useState<Record<ComplaintStatus, SortOrder>>(() => {
-        const initialSortOrders = {} as Record<ComplaintStatus, SortOrder>;
-        for (const status of statusColumns) {
-            initialSortOrders[status] = "none";
-        }
-        return initialSortOrders;
-    });
-
-    const handleSortChange = (status: ComplaintStatus) => {
+    const handleSortChange = useCallback((status: ComplaintStatus) => {
         setSortOrders((prev) => {
             const currentOrder = prev[status];
-            const newOrder: SortOrder = currentOrder === "none" ? "asc" : currentOrder === "asc" ? "desc" : "none";
+            const newOrder: SortOrder =
+                currentOrder === "none"
+                    ? "asc"
+                    : currentOrder === "asc"
+                    ? "desc"
+                    : "none";
             return { ...prev, [status]: newOrder };
         });
-    };
+    }, []);
 
-    const getSortedComplaints = (status: ComplaintStatus) => {
-        const complaints = complaintsByStatus[status] || [];
-        const sortOrder = sortOrders[status];
+    const getSortedComplaints = useCallback(
+        (status: ComplaintStatus) => {
+            const complaints = complaintsByStatus[status] || [];
+            const sortOrder = sortOrders[status];
 
-        if (sortOrder === "none") return complaints;
+            if (sortOrder === "none") return complaints;
 
-        return [...complaints].sort((a, b) => {
-            if (sortOrder === "asc") {
-                return (a.case_number ?? "").localeCompare(b.case_number ?? "");
-            }
-            return (b.case_number ?? "").localeCompare(a.case_number ?? "");
-        });
-    };
+            return [...complaints].sort((a, b) => {
+                if (sortOrder === "asc") {
+                    return (a.case_number ?? "").localeCompare(
+                        b.case_number ?? ""
+                    );
+                }
+                return (b.case_number ?? "").localeCompare(
+                    a.case_number ?? ""
+                );
+            });
+        },
+        [complaintsByStatus, sortOrders]
+    );
 
     return (
-        <div className="select-none">
-            <AlertDialog open={open} onOpenChange={setOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Confirm Dismissal</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Are you sure you want to dismiss this complaint?
-                            This action can be undone later if needed.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirmUpdate}>Confirm</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-            <AnimatePresence mode="wait">
-                {isLoading ? (
-                    <KanbanSkeleton key="skeleton" />
-                ) : (
-                    <motion.div
-                        key="content"
-                        initial={{ opacity: 0, filter: "blur(10px)" }}
-                        animate={{ opacity: 1, filter: "blur(0px)" }}
-                        exit={{ opacity: 0, filter: "blur(10px)" }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCorners}
-                            onDragStart={handleDragStart}
-                            onDragEnd={handleDragEnd}
+        <div className="space-y-6">
+            <div className="select-none">
+                <AlertDialog open={open} onOpenChange={setOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Confirm Dismissal</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to dismiss this complaint?
+                                This action can be undone later if needed.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleConfirmUpdate}>
+                                Confirm
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                <AnimatePresence mode="wait">
+                    {isLoading ? (
+                        <KanbanSkeleton key="skeleton" />
+                    ) : (
+                        <motion.div
+                            key="content"
+                            initial={{ opacity: 0, filter: "blur(10px)" }}
+                            animate={{ opacity: 1, filter: "blur(0px)" }}
+                            exit={{ opacity: 0, filter: "blur(10px)" }}
+                            transition={{ duration: 0.5 }}
                         >
-                            {/* Mobile view */}
-                            <div className="md:hidden">
-                                <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as ComplaintStatus)}>
-                                    <TabsList className="grid w-full grid-cols-4">
-                                        {statusColumns.map((status) => (
-                                            <TabsTrigger key={status} value={status}>
-                                                {status.split("_").map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ")}
-                                            </TabsTrigger>
-                                        ))}
-                                    </TabsList>
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCorners}
+                                onDragStart={handleDragStart}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-4">
                                     {statusColumns.map((status) => (
-                                        <TabsContent key={status} value={status}>
-                                            <DroppableColumn
-                                                id={status}
-                                                status={status}
-                                                complaintsByStatus={complaintsByStatus}
-                                                sortOrder={sortOrders[status]}
-                                                onSortChange={() => handleSortChange(status)}
-                                            >
-                                                <SortableContext
-                                                    items={getSortedComplaints(status).map((c) => c.id)}
-                                                    strategy={verticalListSortingStrategy}
-                                                >
-                                                    <AnimatePresence>
-                                                        {getSortedComplaints(status).map((complaint) => (
-                                                            <SortableComplaint
-                                                                key={complaint.id}
-                                                                complaint={complaint}
-                                                            />
-                                                        ))}
-                                                    </AnimatePresence>
-                                                </SortableContext>
-                                            </DroppableColumn>
-                                        </TabsContent>
-                                    ))}
-                                </Tabs>
-                            </div>
-
-                            {/* Desktop view */}
-                            <div className="hidden md:block">
-                                <div className="flex gap-4 p-4 overflow-x-auto">
-                                    <AnimatePresence>
-                                        {statusColumns.map((status) => (
-                                            <motion.div
-                                                key={status}
-                                                layout
-                                                initial={{ opacity: 0, y: 50, filter: "blur(5px)" }}
-                                                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                                                exit={{ opacity: 0, y: 50, filter: "blur(5px)" }}
-                                                transition={{ duration: 0.3 }}
-                                            >
-                                                <DroppableColumn
-                                                    id={status}
-                                                    status={status}
-                                                    complaintsByStatus={complaintsByStatus}
-                                                    sortOrder={sortOrders[status]}
-                                                    onSortChange={() => handleSortChange(status)}
-                                                >
-                                                    <SortableContext
-                                                        items={getSortedComplaints(status).map((c) => c.id)}
-                                                        strategy={verticalListSortingStrategy}
-                                                    >
-                                                        <AnimatePresence>
-                                                            {getSortedComplaints(status).map((complaint) => (
-                                                                <SortableComplaint
-                                                                    key={complaint.id}
-                                                                    complaint={complaint}
-                                                                />
-                                                            ))}
-                                                        </AnimatePresence>
-                                                    </SortableContext>
-                                                </DroppableColumn>
-                                            </motion.div>
-                                        ))}
-                                    </AnimatePresence>
-                                </div>
-                            </div>
-
-                            {createPortal(
-                                <DragOverlay adjustScale={false} dropAnimation={null}>
-                                    {activeId ? (
-                                        <motion.div
-                                            initial={{ scale: 1, filter: "blur(0px)" }}
-                                            animate={{ scale: 1.05, filter: "blur(0px)" }}
-                                            transition={{ duration: 0.2 }}
-                                            style={{
-                                                transformOrigin: "0 0",
-                                                touchAction: "none",
-                                            }}
+                                        <DroppableColumn
+                                            key={status}
+                                            id={status}
+                                            status={status}
+                                            complaintsByStatus={complaintsByStatus}
+                                            sortOrder={sortOrders[status]}
+                                            onSortChange={() =>
+                                                handleSortChange(status)
+                                            }
                                         >
-                                            <ComplaintItem
-                                                complaint={
-                                                    data?.data.find(
-                                                        (c) => c.id === activeId
-                                                    ) as TableType<"complaints">
+                                            <SortableContext
+                                                items={getSortedComplaints(
+                                                    status
+                                                ).map((c) => c.id)}
+                                                strategy={
+                                                    verticalListSortingStrategy
                                                 }
-                                                statusColor={
-                                                    statusColors[
-                                                    data?.data.find((c) => c.id === activeId)
-                                                        ?.status as ComplaintStatus
-                                                    ]
-                                                }
-                                            />
-                                        </motion.div>
-                                    ) : null}
-                                </DragOverlay>,
-                                document.body
-                            )}
-                        </DndContext>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                            >
+                                                <AnimatePresence>
+                                                    {getSortedComplaints(
+                                                        status
+                                                    ).map((complaint) => (
+                                                        <SortableComplaint
+                                                            key={complaint.id}
+                                                            complaint={complaint}
+                                                        />
+                                                    ))}
+                                                </AnimatePresence>
+                                            </SortableContext>
+                                        </DroppableColumn>
+                                    ))}
+                                </div>
+                                {createPortal(
+                                    <DragOverlay
+                                        adjustScale={false}
+                                        dropAnimation={null}
+                                    >
+                                        {activeId ? (
+                                            <motion.div
+                                                initial={{
+                                                    scale: 1,
+                                                    filter: "blur(0px)",
+                                                }}
+                                                animate={{
+                                                    scale: 1.05,
+                                                    filter: "blur(0px)",
+                                                }}
+                                                transition={{ duration: 0.2 }}
+                                                style={{
+                                                    transformOrigin: "0 0",
+                                                    touchAction: "none",
+                                                }}
+                                            >
+                                                <ComplaintItem
+                                                    complaint={
+                                                        data?.data.find(
+                                                            (c) =>
+                                                                c.id ===
+                                                                activeId
+                                                        ) as TableType<"complaints">
+                                                    }
+                                                    statusColor={
+                                                        statusColors[
+                                                            data?.data.find(
+                                                                (c) =>
+                                                                    c.id ===
+                                                                    activeId
+                                                            )
+                                                                ?.status as ComplaintStatus
+                                                        ]
+                                                    }
+                                                />
+                                            </motion.div>
+                                        ) : null}
+                                    </DragOverlay>,
+                                    document.body
+                                )}
+                            </DndContext>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
         </div>
     );
 };
@@ -468,54 +410,94 @@ interface DroppableColumnProps {
     onSortChange: () => void;
 }
 
-const DroppableColumn: React.FC<DroppableColumnProps> = ({ id, status, children, complaintsByStatus, sortOrder, onSortChange }) => {
-    const { setNodeRef } = useDroppable({ id });
+const DroppableColumn: React.FC<DroppableColumnProps> = React.memo(
+    ({
+        id,
+        status,
+        children,
+        complaintsByStatus,
+        sortOrder,
+        onSortChange,
+    }) => {
+        const { setNodeRef } = useDroppable({ id });
 
-    const getSortIcon = () => {
-        switch (sortOrder) {
-            case "asc":
-                return <ArrowUpIcon className="w-4 h-4 transition-all duration-300 text-muted-foreground hover:text-foreground" />;
-            case "desc":
-                return <ArrowDownIcon className="w-4 h-4 transition-all duration-300 text-muted-foreground hover:text-foreground" />;
-            default:
-                return <ArrowUpDownIcon className="w-4 h-4 transition-all duration-300 text-muted-foreground hover:text-foreground" />;
-        }
-    };
+        const getSortIcon = () => {
+            switch (sortOrder) {
+                case "asc":
+                    return (
+                        <ArrowUpIcon className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                    );
+                case "desc":
+                    return (
+                        <ArrowDownIcon className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                    );
+                default:
+                    return (
+                        <ArrowUpDownIcon className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                    );
+            }
+        };
 
-    return (
-        <div ref={setNodeRef} className="w-full md:w-80">
-            <div className="border rounded-lg bg-background/25 border-border/20">
-                <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                        <div className="flex items-center justify-start gap-2">
-                            <span className="text-lg">{status.split("_").map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ")}</span>
-                            <AnimatePresence mode="wait">
-                                <motion.button
-                                    key={sortOrder}
-                                    initial={{ opacity: 0, y: 1 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -1 }}
-                                    transition={{
-                                        type: "tween",
-                                        stiffness: 300,
-                                        damping: 20,
-                                    }}
-                                    type="button"
-                                    className="flex items-center justify-center w-8 h-6 transition-all duration-300 rounded-lg outline-none hover:bg-muted-foreground/15 hover:border hover:border-border/25 focus:outline-none"
-                                    onClick={onSortChange}
-                                >
-                                    {getSortIcon()}
-                                </motion.button>
-                            </AnimatePresence>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <Badge variant="outline" className="flex items-center justify-center w-8 h-6">
+        return (
+            <div ref={setNodeRef} className="w-full">
+                <div className="flex flex-col h-full border rounded-lg bg-background/25 border-border/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="text-lg">
+                                    {status
+                                        .split("_")
+                                        .map(
+                                            (word) =>
+                                                word.charAt(0).toUpperCase() +
+                                                word.slice(1).toLowerCase()
+                                        )
+                                        .join(" ")}
+                                </span>
+                                <AnimatePresence mode="wait">
+                                    <motion.button
+                                        key={sortOrder}
+                                        initial={{ opacity: 0, y: 1 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -1 }}
+                                        transition={{
+                                            type: "tween",
+                                            stiffness: 300,
+                                            damping: 20,
+                                        }}
+                                        type="button"
+                                        className="flex items-center justify-center w-8 h-6 rounded-lg outline-none hover:bg-muted-foreground/15 hover:border hover:border-border/25 focus:outline-none"
+                                        onClick={onSortChange}
+                                    >
+                                        {getSortIcon()}
+                                    </motion.button>
+                                </AnimatePresence>
+                            </div>
+                            <Badge
+                                variant="outline"
+                                className="flex items-center justify-center w-8 h-6"
+                            >
                                 <AnimatePresence mode="wait">
                                     <motion.span
-                                        key={complaintsByStatus[status]?.length || 0}
-                                        initial={{ opacity: 0, y: 2.5, filter: "blur(1px)" }}
-                                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                                        exit={{ opacity: 0, y: -2.5, filter: "blur(1px)" }}
+                                        key={
+                                            complaintsByStatus[status]?.length ||
+                                            0
+                                        }
+                                        initial={{
+                                            opacity: 0,
+                                            y: 2.5,
+                                            filter: "blur(1px)",
+                                        }}
+                                        animate={{
+                                            opacity: 1,
+                                            y: 0,
+                                            filter: "blur(0px)",
+                                        }}
+                                        exit={{
+                                            opacity: 0,
+                                            y: -2.5,
+                                            filter: "blur(1px)",
+                                        }}
                                         transition={{
                                             type: "tween",
                                             stiffness: 100,
@@ -524,24 +506,25 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({ id, status, children,
                                         }}
                                         className="absolute"
                                     >
-                                        {complaintsByStatus[status]?.length || 0}
+                                        {complaintsByStatus[status]?.length ||
+                                            0}
                                     </motion.span>
                                 </AnimatePresence>
                             </Badge>
-                        </div>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="h-[calc(100vh-240px)] overflow-y-auto">
-                    {children}
-                    {React.Children.count(children) === 0 && (
-                        <div className="flex items-center justify-center h-16 border-2 border-gray-300 border-dashed rounded-lg">
-                            Drop here
-                        </div>
-                    )}
-                </CardContent>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 overflow-y-auto">
+                        {children}
+                        {React.Children.count(children) === 0 && (
+                            <div className="flex items-center justify-center h-16 border-2 border-gray-300 border-dashed rounded-lg">
+                                Drop here
+                            </div>
+                        )}
+                    </CardContent>
+                </div>
             </div>
-        </div>
-    );
-};
+        );
+    }
+);
 
 export default BarangayFiledComplaints;

@@ -155,15 +155,6 @@ const ComplaintRow: React.FC<ComplaintRowProps> = React.memo(({ row, complaintTy
                                     >
                                         View
                                     </button>
-                                    <button
-                                        type="button"
-                                        className="py-1.5 px-2 rounded-sm text-left text-sm hover:bg-muted-foreground/25"
-                                        onClick={() => {
-                                            edit("complaints", row.original.id);
-                                        }}
-                                    >
-                                        Edit
-                                    </button>
                                 </div>
                             </PopoverContent>
                         </motion.div>

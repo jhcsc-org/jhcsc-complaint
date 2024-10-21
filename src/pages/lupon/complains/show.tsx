@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileInput, FileUploader, FileUploaderContent, FileUploaderItem } from '@/components/ui/file-input';
 import { Dialog, DialogClose, DialogContainer, DialogContent, DialogTrigger } from "@/components/ui/motion-dialog";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,9 +10,8 @@ import { TableType } from "@/types/dev.types";
 import { supabaseClient } from "@/utility";
 import { useList, useNavigation, useResource, useShow } from "@refinedev/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, ChevronLeft, CloudUpload, DollarSign, FileIcon, Gavel, Home, MapPin, Paperclip, Phone, UserIcon, XIcon } from "lucide-react";
+import { AlertCircle, ChevronLeft, DollarSign, FileIcon, Gavel, Home, MapPin, Paperclip, Phone, UserIcon, XIcon } from "lucide-react";
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
-import { toast } from 'sonner';
 
 const DialogImage = lazy(() => import('@/components/ui/motion-dialog').then(mod => ({ default: mod.DialogImage })));
 
@@ -49,7 +47,7 @@ const sectionVariants = {
     }
 };
 
-export const ComplainShow: React.FC = () => {
+export const LuponComplainShow: React.FC = () => {
     const { list } = useNavigation();
     const { id } = useResource();
     const { queryResult } = useShow<TableType<"complaint_view">>({
@@ -149,47 +147,14 @@ export const ComplainShow: React.FC = () => {
         return documentUrls;
     }, [documentUrls]);
 
-    const handleUpload = async () => {
-        if (uploadedFiles.length === 0) {
-            toast.error("Please select a file to upload.");
-            return;
-        }
-
-        try {
-            await Promise.all(uploadedFiles.map(async (file) => {
-                const { data, error } = await supabaseClient
-                    .storage
-                    .from('complaint_documents')
-                    .upload(`complaints/${id}/${file.name}`, file);
-
-                if (error) {
-                    throw error;
-                }
-
-                const { error: documentError } = await supabaseClient.from('complaint_documents').insert({
-                    complaint_id: id,
-                    file_name: file.name,
-                    file_path: data.path,
-                });
-
-                if (documentError) {
-                    throw documentError;
-                }
-            }));
-
-            toast.success("Files uploaded successfully.");
-            setUploadedFiles([]);
-        } catch (err) {
-            console.error("Error during file upload:", err);
-            toast.error("Failed to upload files.");
-        }
-    };
+    
+    const {goBack, push} = useNavigation();
 
     if (isLoading) {
         return <div className="max-w-3xl p-4 mx-auto">
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold">Complaint Details</h1>
-                <Button variant="ghost" onClick={() => list("complaints")}><ChevronLeft className="w-4 h-4 mr-2" /> Back to List</Button>
+                <Button variant="ghost" onClick={() => push("/lupon/complaints")}><ChevronLeft className="w-4 h-4 mr-2" /> Back to List</Button>
             </div>
             <Skeleton className="max-w-3xl h-[500px] p-4 mx-auto rounded-lg bg-muted-foreground/10" />
         </div>;
@@ -206,7 +171,7 @@ export const ComplainShow: React.FC = () => {
             >
                 <div className="flex items-center justify-between mb-6">
                     <h1 className="text-2xl font-bold">Complaint Details</h1>
-                    <Button variant="ghost" onClick={() => list("complaints")}><ChevronLeft className="w-4 h-4 mr-2" /> Back to List</Button>
+                    <Button variant="ghost" onClick={() => push("/lupon/complaints")}><ChevronLeft className="w-4 h-4 mr-2" /> Back to List</Button>
                 </div>
                 <Card>
                     <CardContent className="p-6 space-y-6">
@@ -407,50 +372,6 @@ export const ComplainShow: React.FC = () => {
                             ) : (
                                 <p className="text-sm text-gray-600">No files attached</p>
                             )}
-                            <div className="mt-4">
-                                <h3 className="mb-2 text-lg font-semibold">Upload Additional Files</h3>
-                                <FileUploader
-                                    value={uploadedFiles}
-                                    onValueChange={(files) => setUploadedFiles(files || [])}
-                                    dropzoneOptions={{
-                                        accept: {
-                                            'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
-                                            'application/pdf': ['.pdf'],
-                                            'video/*': ['.mp4', '.avi', '.mov'],
-                                            'application/msword': ['.doc', '.docx'],
-                                        },
-                                        maxFiles: 5,
-                                        maxSize: 10 * 1024 * 1024, // 10 MB
-                                        multiple: true,
-                                    }}
-                                    className="relative p-1 rounded-lg bg-card"
-                                >
-                                    <FileInput
-                                        id="fileInput"
-                                        className="outline-dashed outline-1 outline-slate-500"
-                                    >
-                                        <div className="flex flex-col items-center justify-center w-full p-8 ">
-                                            <CloudUpload className='w-10 h-10 text-gray-500' />
-                                            <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
-                                                <span className="font-semibold">Click to upload</span>
-                                                &nbsp; or drag and drop
-                                            </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                Supported file types: JPG, PNG, GIF, PDF, DOC, MP4
-                                            </p>
-                                        </div>
-                                    </FileInput>
-                                    <FileUploaderContent>
-                                        {uploadedFiles.map((file, index) => (
-                                            <FileUploaderItem className="px-4 py-4" key={`${file.name}-${index}`} index={index}>
-                                                <Paperclip className="w-4 h-4 stroke-current" />
-                                                <span>{file.name}</span>
-                                            </FileUploaderItem>
-                                        ))}
-                                    </FileUploaderContent>
-                                </FileUploader>
-                                <Button onClick={handleUpload} className="w-full mt-2">Upload Document</Button>
-                            </div>
                         </motion.section>
                         <Separator />
                         <motion.section variants={sectionVariants}>
