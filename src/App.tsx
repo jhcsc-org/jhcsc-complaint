@@ -30,6 +30,7 @@ import { BarangayCitizenList } from "./pages/lupon/citizens";
 import BarangayFiledComplaints from "./pages/lupon/complains/list";
 import { LuponComplainShow } from "./pages/lupon/complains/show";
 import { LuponComplainList } from "./pages/lupon/list";
+import DashboardReports from "./pages/lupon/report";
 import { supabaseClient } from "./utility";
 
 function App() {
@@ -136,6 +137,7 @@ function App() {
                   <Route path="show/:id" element={<ComplainShow />} />
                 </Route>
                 <Route path="/lupon/citizens" element={<BarangayCitizenList />} />
+                <Route path="reports" element={<DashboardReports/>}/>
                 <Route path="*" element={<ErrorComponent />} />
               </Route>
               <Route
