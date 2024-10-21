@@ -17,7 +17,7 @@ import { Separator } from "../ui/separator";
 
 const roleRoutes: Record<string, string[]> = {
   citizen: ['/', '/create'],
-  lupon_member: ['/lupon/manage', '/lupon/complaints', '/lupon/complaints/show/', '/lupon/citizens', '/reports'],
+  lupon_member: ['/lupon/manage', '/lupon/complaints', '/lupon/complaints/show/', '/lupon/citizens', '/lupon/reports'],
   admin: ['/admin/manage', '/admin/complaints'],
 };
 

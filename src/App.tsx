@@ -12,6 +12,7 @@ import routerBindings, {
 import { dataProvider, liveProvider } from "@refinedev/supabase";
 import {
   BookCopyIcon,
+  LineChartIcon,
   ScanSearchIcon,
   SendIcon,
   UsersIcon
@@ -96,6 +97,13 @@ function App() {
                 icon: <UsersIcon className="w-5 h-5" />,
                 idColumnName: "user_id",
               }
+            }, {
+              name: "reports",
+              list: "/lupon/reports",
+              meta: {
+                label: "Barangay Report",
+                icon: <LineChartIcon className="w-5 h-5"/>,
+              }
             }]}
             options={{
               syncWithLocation: true,
@@ -137,7 +145,7 @@ function App() {
                   <Route path="show/:id" element={<ComplainShow />} />
                 </Route>
                 <Route path="/lupon/citizens" element={<BarangayCitizenList />} />
-                <Route path="reports" element={<DashboardReports/>}/>
+                <Route path="/lupon/reports" element={<DashboardReports/>}/>
                 <Route path="*" element={<ErrorComponent />} />
               </Route>
               <Route
