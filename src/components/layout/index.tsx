@@ -10,7 +10,7 @@ import { TableType } from "@/types/dev.types";
 import { BaseKey, useGetIdentity, useList, useLogout, useMenu, useNavigation, useOne } from "@refinedev/core";
 import { User } from "@supabase/supabase-js";
 import { CircleDotDashedIcon } from "lucide-react";
-import { type PropsWithChildren } from "react";
+import { useEffect, useState, type PropsWithChildren } from "react";
 import { NavLink } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Separator } from "../ui/separator";
@@ -43,7 +43,27 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
     }
   });
 
+  const [role, setRole] = useState<string | undefined | null>();
   const full_name = `${user?.user_metadata.first_name} ${user?.user_metadata.middle_name ? `${user.user_metadata.middle_name} ` : ''}${user?.user_metadata.last_name}`;
+
+  useEffect(() => {
+    if (userRole !== undefined) {
+      setRole(userRole.data.role_name)
+    }
+  }, [userRole?.data])
+
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (role === 'citizen') {
+      return item.route === '/' || item.route === '/create';
+    }
+    if (role === 'lupon_member') {
+      return item.route === '/lupon/manage' || item.route === '/lupon/complaints';
+    }
+    if (role === 'admin') {
+      return item.route === '/admin/manage' || item.route === '/admin/complaints';
+    }
+    return false;
+  });
 
   return (
     <div className="flex min-h-screen py-4 lg:pr-4">
@@ -55,19 +75,14 @@ export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
           </div>
           <Separator />
           <ul className="px-4 pb-4 mt-4">
-            {!isUserRoleLoading && menuItems.map((item) => {
-              if (item.label === "Manage Complaints" && (userRole?.data.role_name === 'admin' ||userRole?.data.role_name === 'lupon')) {
-                return null; 
-              }
-              return (
-                <NavLink key={item.label} className="my-6 text-sm font-medium" to={item.route ?? "/"} >
-                  <li className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted-foreground/25">
-                    {item.icon}
-                    {item.label}
-                  </li>
-                </NavLink>
-              );
-            })}
+            {!isUserRoleLoading && filteredMenuItems.map((item) => (
+              <NavLink key={item.label} className="my-6 text-sm font-medium" to={item.route ?? "/"}>
+                <li className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted-foreground/25">
+                  {item.icon}
+                  {item.label}
+                </li>
+              </NavLink>
+            ))}
           </ul>
           <Separator />
           <ul className="px-4 mt-4">

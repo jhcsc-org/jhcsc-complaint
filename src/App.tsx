@@ -64,7 +64,7 @@ function App() {
               },
               {
                 name: "complaints",
-                list: "/admin/complaints",
+                list: "/admin/manage",
                 identifier: "admin_complaints",
                 meta: {
                   label: "All Complaints Status",
@@ -124,7 +124,7 @@ function App() {
                   <Route path="edit/:id" element={<HeadlessInferencer />} />
                   <Route path="show/:id" element={<ComplainShow />} />
                 </Route>
-                <Route path="/admin/complaints" element={<Outlet />}>
+                <Route path="/admin/manage" element={<Outlet />}>
                   <Route index element={<FiledComplaints />} />
                   <Route path="show/:id" element={<ComplainShow />} />
                 </Route>
