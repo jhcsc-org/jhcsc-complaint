@@ -1,3 +1,5 @@
+// Updated DashboardReports component with proper PDF generation and additional features
+
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -19,6 +21,7 @@ import {
     ArrowUpDownIcon,
     ArrowUpIcon,
     DownloadIcon,
+    PrinterIcon,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import {
@@ -39,14 +42,17 @@ import {
     RadarChart,
     RadialBar,
     RadialBarChart,
-    ResponsiveContainer, // Import ResponsiveContainer
+    ResponsiveContainer,
     Tooltip,
     XAxis,
     YAxis,
 } from "recharts";
 import { toast } from "sonner";
-import { columns } from "./columns";
-import { DataTable } from "./data-table";
+
+// Import jsPDF and autoTable
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Column {
   key: string;
@@ -114,7 +120,7 @@ const RenderTable: React.FC<{
   isLoading: boolean;
   sorter?: Sorter;
   setSorter?: React.Dispatch<React.SetStateAction<Sorter>>;
-}> = ({ data, isLoading, sorter, setSorter }) => {
+}> = ({ data, columns, isLoading, sorter, setSorter }) => {
   const handleSort = (column: Column) => {
     if (!setSorter || !sorter) return;
     const isAsc = sorter.field === column.key && sorter.order === "asc";
@@ -132,7 +138,48 @@ const RenderTable: React.FC<{
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <DataTable columns={columns} data={data} />
+          <table className="min-w-full divide-y">
+            <thead >
+              <tr>
+                {columns.map((col) => (
+                  <th
+                    key={col.key}
+                    scope="col"
+                    className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase"
+                  >
+                    {col.sortable ? (
+                      <SortableHeader
+                        column={col}
+                        label={col.label}
+                        onSort={handleSort}
+                        isSorted={
+                          sorter?.field === col.key ? sorter.order : false
+                        }
+                      />
+                    ) : (
+                      col.label
+                    )}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {data.map((item: any, idx: number) => (
+                <tr key={idx}>
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap"
+                    >
+                      {item[col.key] !== null && item[col.key] !== undefined
+                        ? item[col.key]
+                        : "N/A"}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </>
@@ -140,66 +187,43 @@ const RenderTable: React.FC<{
 };
 
 // Define chart configurations
-const barChartConfig = {
+const chartConfigs: { [key: string]: ChartConfig } = {
   bar: {
-    label: "Bar Chart",
-    color: "var(--chart-1)",
+    bar: {
+      label: "Bar Chart",
+      color: "var(--chart-1)",
+    },
   },
-} satisfies ChartConfig;
-
-const lineChartConfig = {
   line: {
-    label: "Line Chart",
-    color: "var(--chart-2)",
+    line: {
+      label: "Line Chart",
+      color: "var(--chart-2)",
+    },
   },
-} satisfies ChartConfig;
-
-const areaChartConfig = {
   area: {
-    label: "Area Chart",
-    color: "var(--chart-3)",
+    area: {
+      label: "Area Chart",
+      color: "var(--chart-3)",
+    },
   },
-} satisfies ChartConfig;
-
-const pieChartConfig = {
   pie: {
-    label: "Pie Chart",
-    color: "var(--chart-4)",
+    pie: {
+      label: "Pie Chart",
+      color: "var(--chart-4)",
+    },
   },
-} satisfies ChartConfig;
-
-const radarChartConfig = {
   radar: {
-    label: "Radar Chart",
-    color: "var(--chart-5)",
+    radar: {
+      label: "Radar Chart",
+      color: "var(--chart-5)",
+    },
   },
-} satisfies ChartConfig;
-
-const radialBarChartConfig = {
   radialBar: {
-    label: "Radial Bar Chart",
-    color: "var(--chart-1)",
+    radialBar: {
+      label: "Radial Bar Chart",
+      color: "var(--chart-1)",
+    },
   },
-} satisfies ChartConfig;
-
-// Helper function to get chart config
-const getChartConfig = (chartType: string) => {
-  switch (chartType) {
-    case "bar":
-      return barChartConfig;
-    case "line":
-      return lineChartConfig;
-    case "area":
-      return areaChartConfig;
-    case "pie":
-      return pieChartConfig;
-    case "radar":
-      return radarChartConfig;
-    case "radialBar":
-      return radialBarChartConfig;
-    default:
-      return {};
-  }
 };
 
 // RenderChart component
@@ -224,7 +248,7 @@ const RenderChart: React.FC<{
 
   return (
     <ChartContainer
-      config={getChartConfig(chartType)}
+      config={chartConfigs[chartType]}
       className="min-h-[300px] w-full h-full"
     >
       <ResponsiveContainer width="100%" height="100%">
@@ -245,11 +269,7 @@ const RenderChart: React.FC<{
             <YAxis />
             <Tooltip content={<ChartTooltipContent />} />
             <Legend content={<ChartLegendContent />} />
-            <Line
-              type="monotone"
-              dataKey={dataKey}
-              stroke="var(--chart-2)"
-            />
+            <Line type="monotone" dataKey={dataKey} stroke="var(--chart-2)" />
           </LineChart>
         )}
         {chartType === "area" && (
@@ -334,6 +354,91 @@ const RenderChart: React.FC<{
   );
 };
 
+// Helper function to generate PDF using jsPDF and autoTable
+const generatePDF = async (
+  data: any[],
+  columns: Column[],
+  title: string,
+  filename: string
+) => {
+  if (!data || data.length === 0) {
+    toast.error("No data available to download.");
+    return;
+  }
+
+  const doc = new jsPDF("landscape");
+
+  // Set PDF metadata and styling
+  doc.setFontSize(18);
+  doc.text(title, 14, 22);
+
+  // Prepare table column headers
+  const tableColumn = columns.map((col) => ({
+    header: col.label,
+    dataKey: col.key,
+  }));
+
+  // Prepare table rows
+  const tableRows = data.map((item) => {
+    const row: any = {};
+    columns.forEach((col) => {
+      row[col.key] =
+        item[col.key] !== null && item[col.key] !== undefined
+          ? item[col.key].toString()
+          : "N/A";
+    });
+    return row;
+  });
+
+  // Add autoTable to the PDF
+  autoTable(doc, {
+    startY: 30,
+    head: [tableColumn],
+    body: tableRows,
+    styles: {
+      fontSize: 10,
+      cellPadding: 3,
+    },
+    headStyles: {
+      fillColor: [22, 160, 133],
+      textColor: 255,
+    },
+    alternateRowStyles: {
+      fillColor: [240, 240, 240],
+    },
+    theme: "grid",
+  });
+
+  // Save the PDF
+  doc.save(`${filename}.pdf`);
+};
+
+// Helper function to download JSON data
+const downloadJSON = (data: any[], filename: string) => {
+  if (!data || data.length === 0) {
+    toast.error("No data available to download.");
+    return;
+  }
+  const jsonData = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonData], { type: "application/json" });
+  saveAs(blob, `${filename}.json`);
+};
+
+// Helper function to print the component
+const printComponent = (componentId: string) => {
+  const printContents = document.getElementById(componentId)?.innerHTML;
+  const originalContents = document.body.innerHTML;
+
+  if (printContents) {
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    window.location.reload();
+  } else {
+    toast.error("Unable to print the content.");
+  }
+};
+
 // Main DashboardReports component
 const DashboardReports: React.FC = () => {
   const [sorter, setSorter] = useState<Sorter>({
@@ -349,7 +454,7 @@ const DashboardReports: React.FC = () => {
     resource: "report_lupon_complaint_summary",
     config: {
       pagination: {
-        pageSize: 10,
+        pageSize: 1000,
       },
     },
   });
@@ -375,7 +480,7 @@ const DashboardReports: React.FC = () => {
     resource: "report_lupon_resolution_times",
     config: {
       pagination: {
-        pageSize: 10,
+        pageSize: 1000,
       },
     },
   });
@@ -388,7 +493,7 @@ const DashboardReports: React.FC = () => {
     resource: "report_lupon_participant_details",
     config: {
       pagination: {
-        pageSize: 10,
+        pageSize: 1000,
       },
     },
   });
@@ -401,7 +506,7 @@ const DashboardReports: React.FC = () => {
     resource: "report_lupon_documentation",
     config: {
       pagination: {
-        pageSize: 10,
+        pageSize: 1000,
       },
     },
   });
@@ -414,7 +519,7 @@ const DashboardReports: React.FC = () => {
     resource: "report_lupon_member_activity",
     config: {
       pagination: {
-        pageSize: 10,
+        pageSize: 1000,
       },
     },
   });
@@ -451,17 +556,6 @@ const DashboardReports: React.FC = () => {
       lupon_member: `${item.first_name ?? ""} ${item.last_name ?? ""}`.trim(),
     }));
   }, [memberActivityData]);
-
-  // Handle Download
-  const handleDownload = (data: any[], filename: string) => {
-    if (!data || data.length === 0) {
-      toast.error("No data available to download.");
-      return;
-    }
-    const jsonData = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonData], { type: "application/json" });
-    saveAs(blob, `${filename}.json`);
-  };
 
   // Prepare Trends Chart Data
   const trendsChartData = useMemo(() => {
@@ -517,32 +611,92 @@ const DashboardReports: React.FC = () => {
     },
   ];
 
+  // Summary Metrics
+  const totalComplaints = processedSummaryData.reduce(
+    (acc, item) => acc + (item.total_complaints || 0),
+    0
+  );
+
+  const avgResolutionTime = (
+    processedSummaryData.reduce(
+      (acc, item) => acc + (item.avg_resolution_time_days || 0),
+      0
+    ) / processedSummaryData.length
+  ).toFixed(2);
+
   return (
     <div className="p-4 space-y-6">
+      {/* Summary Metrics */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <Card className="flex flex-col h-full">
+          <CardHeader>
+            <CardTitle>Total Complaints Handled</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <h2 className="text-4xl font-bold">{totalComplaints}</h2>
+          </CardContent>
+        </Card>
+        <Card className="flex flex-col h-full">
+          <CardHeader>
+            <CardTitle>Average Resolution Time (days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <h2 className="text-4xl font-bold">{avgResolutionTime}</h2>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 gap-6">
         {/* Complaint Summary Card */}
         <Card className="flex flex-col h-full">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Complaint Summary</CardTitle>
-            <Button
-              onClick={() =>
-                handleDownload(processedSummaryData, "complaint_summary")
-              }
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <DownloadIcon className="w-4 h-4" />
-              Download Report
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={() =>
+                  generatePDF(
+                    processedSummaryData,
+                    summaryColumns,
+                    "Complaint Summary Report",
+                    "complaint_summary"
+                  )
+                }
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download PDF
+              </Button>
+              <Button
+                onClick={() =>
+                  downloadJSON(processedSummaryData, "complaint_summary")
+                }
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download JSON
+              </Button>
+              <Button
+                onClick={() => printComponent("complaint-summary")}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <PrinterIcon className="w-4 h-4" />
+                Print
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="flex-1">
-            <RenderTable
-              data={processedSummaryData}
-              columns={summaryColumns}
-              isLoading={isSummaryLoading}
-              sorter={sorter}
-              setSorter={setSorter}
-            />
+            <div id="complaint-summary">
+              <RenderTable
+                data={processedSummaryData}
+                columns={summaryColumns}
+                isLoading={isSummaryLoading}
+                sorter={sorter}
+                setSorter={setSorter}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -550,25 +704,66 @@ const DashboardReports: React.FC = () => {
         <Card className="flex flex-col h-full">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Complaint Trends (Last 12 Months)</CardTitle>
-            <Button
-              onClick={() =>
-                handleDownload(trendsData?.data || [], "complaint_trends")
-              }
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <DownloadIcon className="w-4 h-4" />
-              Download Report
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={async () => {
+                  if (!trendsChartData || trendsChartData.length === 0) {
+                    toast.error("No data available to download.");
+                    return;
+                  }
+
+                  const doc = new jsPDF("landscape");
+                  doc.setFontSize(18);
+                  doc.text("Complaint Trends (Last 12 Months)", 14, 22);
+
+                  const chartContainer = document.getElementById(
+                    "trends-chart"
+                  );
+                  if (chartContainer) {
+                    const canvas = await html2canvas(chartContainer);
+                    const imgData = canvas.toDataURL("image/png");
+                    doc.addImage(imgData, "PNG", 15, 30, 260, 100);
+                    doc.save("complaint_trends.pdf");
+                  } else {
+                    toast.error("Unable to generate PDF.");
+                  }
+                }}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download PDF
+              </Button>
+              <Button
+                onClick={() =>
+                  downloadJSON(trendsChartData, "complaint_trends")
+                }
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download JSON
+              </Button>
+              <Button
+                onClick={() => printComponent("trends-chart")}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <PrinterIcon className="w-4 h-4" />
+                Print
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="flex-1">
-            <RenderChart
-              data={trendsChartData}
-              chartType="line"
-              dataKey="complaint_count"
-              xAxisKey="month"
-              isLoading={isTrendsLoading}
-            />
+            <div id="trends-chart">
+              <RenderChart
+                data={trendsChartData}
+                chartType="line"
+                dataKey="complaint_count"
+                xAxisKey="month"
+                isLoading={isTrendsLoading}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -576,28 +771,69 @@ const DashboardReports: React.FC = () => {
         <Card className="flex flex-col h-full">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Resolution Times</CardTitle>
-            <Button
-              onClick={() =>
-                handleDownload(
-                  resolutionTimesData?.data || [],
-                  "resolution_times"
-                )
-              }
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <DownloadIcon className="w-4 h-4" />
-              Download Report
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={async () => {
+                  if (
+                    !resolutionChartData ||
+                    resolutionChartData.length === 0
+                  ) {
+                    toast.error("No data available to download.");
+                    return;
+                  }
+
+                  const doc = new jsPDF("landscape");
+                  doc.setFontSize(18);
+                  doc.text("Resolution Times", 14, 22);
+
+                  const chartContainer = document.getElementById(
+                    "resolution-chart"
+                  );
+                  if (chartContainer) {
+                    const canvas = await html2canvas(chartContainer);
+                    const imgData = canvas.toDataURL("image/png");
+                    doc.addImage(imgData, "PNG", 15, 30, 260, 100);
+                    doc.save("resolution_times.pdf");
+                  } else {
+                    toast.error("Unable to generate PDF.");
+                  }
+                }}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download PDF
+              </Button>
+              <Button
+                onClick={() =>
+                  downloadJSON(resolutionChartData, "resolution_times")
+                }
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download JSON
+              </Button>
+              <Button
+                onClick={() => printComponent("resolution-chart")}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <PrinterIcon className="w-4 h-4" />
+                Print
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="flex-1">
-            <RenderChart
-              data={resolutionChartData}
-              chartType="area"
-              dataKey="resolution_time_days"
-              xAxisKey="case_number"
-              isLoading={isResolutionTimesLoading}
-            />
+            <div id="resolution-chart">
+              <RenderChart
+                data={resolutionChartData}
+                chartType="area"
+                dataKey="resolution_time_days"
+                xAxisKey="case_number"
+                isLoading={isResolutionTimesLoading}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -605,26 +841,50 @@ const DashboardReports: React.FC = () => {
         <Card className="flex flex-col h-full">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Participant Details</CardTitle>
-            <Button
-              onClick={() =>
-                handleDownload(
-                  processedParticipantData,
-                  "participant_details"
-                )
-              }
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <DownloadIcon className="w-4 h-4" />
-              Download Report
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={() =>
+                  generatePDF(
+                    processedParticipantData,
+                    participantColumns,
+                    "Participant Details Report",
+                    "participant_details"
+                  )
+                }
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download PDF
+              </Button>
+              <Button
+                onClick={() =>
+                  downloadJSON(processedParticipantData, "participant_details")
+                }
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download JSON
+              </Button>
+              <Button
+                onClick={() => printComponent("participant-details")}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <PrinterIcon className="w-4 h-4" />
+                Print
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="flex-1">
-            <RenderTable
-              data={processedParticipantData}
-              columns={participantColumns}
-              isLoading={isParticipantDetailsLoading}
-            />
+            <div id="participant-details">
+              <RenderTable
+                data={processedParticipantData}
+                columns={participantColumns}
+                isLoading={isParticipantDetailsLoading}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -632,28 +892,72 @@ const DashboardReports: React.FC = () => {
         <Card className="flex flex-col h-full">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Lupon Member Activity</CardTitle>
-            <Button
-              onClick={() =>
-                handleDownload(
-                  processedMemberActivityData,
-                  "member_activity"
-                )
-              }
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <DownloadIcon className="w-4 h-4" />
-              Download Report
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={async () => {
+                  if (
+                    !processedMemberActivityData ||
+                    processedMemberActivityData.length === 0
+                  ) {
+                    toast.error("No data available to download.");
+                    return;
+                  }
+
+                  const doc = new jsPDF("landscape");
+                  doc.setFontSize(18);
+                  doc.text("Lupon Member Activity", 14, 22);
+
+                  const chartContainer = document.getElementById(
+                    "member-activity-chart"
+                  );
+                  if (chartContainer) {
+                    const canvas = await html2canvas(chartContainer);
+                    const imgData = canvas.toDataURL("image/png");
+                    doc.addImage(imgData, "PNG", 15, 30, 260, 100);
+                    doc.save("member_activity.pdf");
+                  } else {
+                    toast.error("Unable to generate PDF.");
+                  }
+                }}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download PDF
+              </Button>
+              <Button
+                onClick={() =>
+                  downloadJSON(
+                    processedMemberActivityData,
+                    "member_activity"
+                  )
+                }
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download JSON
+              </Button>
+              <Button
+                onClick={() => printComponent("member-activity-chart")}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <PrinterIcon className="w-4 h-4" />
+                Print
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="flex-1">
-            <RenderChart
-              data={processedMemberActivityData}
-              chartType="radar"
-              dataKey="complaints_handled"
-              xAxisKey="lupon_member"
-              isLoading={isMemberActivityLoading}
-            />
+            <div id="member-activity-chart">
+              <RenderChart
+                data={processedMemberActivityData}
+                chartType="radar"
+                dataKey="complaints_handled"
+                xAxisKey="lupon_member"
+                isLoading={isMemberActivityLoading}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -661,26 +965,50 @@ const DashboardReports: React.FC = () => {
         <Card className="flex flex-col h-full">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Documentation</CardTitle>
-            <Button
-              onClick={() =>
-                handleDownload(
-                  processedDocumentationData,
-                  "documentation"
-                )
-              }
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <DownloadIcon className="w-4 h-4" />
-              Download Report
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={() =>
+                  generatePDF(
+                    processedDocumentationData,
+                    documentationColumns,
+                    "Documentation Report",
+                    "documentation"
+                  )
+                }
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download PDF
+              </Button>
+              <Button
+                onClick={() =>
+                  downloadJSON(processedDocumentationData, "documentation")
+                }
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <DownloadIcon className="w-4 h-4" />
+                Download JSON
+              </Button>
+              <Button
+                onClick={() => printComponent("documentation-table")}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <PrinterIcon className="w-4 h-4" />
+                Print
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="flex-1">
-            <RenderTable
-              data={processedDocumentationData}
-              columns={documentationColumns}
-              isLoading={isDocumentationLoading}
-            />
+            <div id="documentation-table">
+              <RenderTable
+                data={processedDocumentationData}
+                columns={documentationColumns}
+                isLoading={isDocumentationLoading}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
