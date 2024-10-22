@@ -327,7 +327,7 @@ export const BarangayCitizenList: React.FC = () => {
     );
 
     return (
-        <div className="p-4 mx-auto">
+        <div className="mx-auto">
             <motion.div
                 initial="hidden"
                 animate="visible"

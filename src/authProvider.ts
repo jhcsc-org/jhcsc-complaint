@@ -75,7 +75,6 @@ const authProvider: AuthProvider = {
     },
   }) => {
     try {
-      console.log(first_name, middle_name, last_name, address, barangay_id);
       const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
@@ -85,6 +84,7 @@ const authProvider: AuthProvider = {
             middle_name,
             last_name, 
             address,
+            role_id,
             barangay_id,
           },
         },

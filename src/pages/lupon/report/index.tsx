@@ -2,50 +2,50 @@
 
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import {
-    ChartConfig,
-    ChartContainer,
-    ChartLegendContent,
-    ChartTooltipContent,
+  ChartConfig,
+  ChartContainer,
+  ChartLegendContent,
+  ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useList } from "@refinedev/core";
 import { saveAs } from "file-saver";
 import {
-    ArrowDownIcon,
-    ArrowUpDownIcon,
-    ArrowUpIcon,
-    DownloadIcon,
-    PrinterIcon,
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  DownloadIcon,
+  PrinterIcon,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import {
-    Area,
-    AreaChart,
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Legend,
-    Line,
-    LineChart,
-    Pie,
-    PieChart,
-    PolarAngleAxis,
-    PolarGrid,
-    PolarRadiusAxis,
-    Radar,
-    RadarChart,
-    RadialBar,
-    RadialBarChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+  RadialBar,
+  RadialBarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { toast } from "sonner";
 
@@ -625,7 +625,7 @@ const DashboardReports: React.FC = () => {
   ).toFixed(2);
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="space-y-6">
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className="flex flex-col h-full">

@@ -472,7 +472,7 @@ export const ComplainCreate = () => {
                                                     value={field.value || null}
                                                     onValueChange={field.onChange}
                                                     dropzoneOptions={dropZoneConfig}
-                                                    className="relative p-2 rounded-lg bg-card"
+                                                    className="relative p-2 rounded-lg"
                                                 >
                                                     <FileInput
                                                         id="fileInput"

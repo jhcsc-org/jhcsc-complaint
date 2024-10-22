@@ -9,8 +9,17 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { TableType } from "@/types/dev.types";
 import {
     DndContext,
@@ -30,11 +39,13 @@ import {
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { ArrowDownIcon, ArrowUpIcon } from "@radix-ui/react-icons";
-import { useGetIdentity, useList, useUpdate } from "@refinedev/core";
+import { CrudFilter, useGetIdentity, useList, useUpdate } from "@refinedev/core";
 import { User } from "@supabase/supabase-js";
+import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpDownIcon } from "lucide-react";
+import { ArrowUpDownIcon, CalendarIcon, X } from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
+import { DateRange } from "react-day-picker";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { ComplaintItem } from "./ComplaintItem";
@@ -93,17 +104,42 @@ type SortOrder = "asc" | "desc" | "none";
 export const BarangayFiledComplaints: React.FC = () => {
     const { data: userData } = useGetIdentity<User>();
 
+    // Replace the selectedDate state with dateRange
+    const [dateRange, setDateRange] = useState<DateRange | undefined>()
+
+    // Update the filters logic
+    const filters: CrudFilter[] = [
+        {
+            field: "barangay_id",
+            value: userData?.user_metadata.barangay_id,
+            operator: "eq",
+        },
+    ];
+
+    if (dateRange?.from) {
+        const fromDate = format(dateRange.from, "yyyy-MM-dd")
+        filters.push({
+            field: "date_filed",
+            operator: "gte",
+            value: `${fromDate}T00:00:00.000Z`,
+        });
+
+        // Add to date if it exists
+        if (dateRange.to) {
+            const toDate = format(dateRange.to, "yyyy-MM-dd")
+            filters.push({
+                field: "date_filed",
+                operator: "lte",
+                value: `${toDate}T23:59:59.999Z`,
+            });
+        }
+    }
+
     const { data, isLoading } = useList<TableType<"complaints">>({
         resource: "complaints",
         pagination: { mode: "off" },
         liveMode: "auto",
-        filters: [
-            {
-                field: "barangay_id",
-                value: userData?.user_metadata.barangay_id,
-                operator: "eq",
-            },
-        ],
+        filters: filters,
     });
 
     const { mutate: updateComplaint } = useUpdate();
@@ -249,8 +285,8 @@ export const BarangayFiledComplaints: React.FC = () => {
                 currentOrder === "none"
                     ? "asc"
                     : currentOrder === "asc"
-                    ? "desc"
-                    : "none";
+                        ? "desc"
+                        : "none";
             return { ...prev, [status]: newOrder };
         });
     }, []);
@@ -276,8 +312,70 @@ export const BarangayFiledComplaints: React.FC = () => {
         [complaintsByStatus, sortOrders]
     );
 
+    // Helper function to format date range display
+    const formatDateRange = (range: DateRange | undefined) => {
+        if (!range?.from) return "Pick a date";
+        if (!range.to) return format(range.from, "PPP");
+        return `${format(range.from, "PPP")} - ${format(range.to, "PPP")}`;
+    };
+
     return (
         <div className="space-y-6">
+            {/* Date Filter */}
+            <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+                <div className="w-full sm:w-1/3">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !dateRange?.from && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="w-4 h-4 mr-2" />
+                                {dateRange?.from ? (
+                                    <span className="flex items-center gap-2">
+                                        {formatDateRange(dateRange)}
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="w-4 h-4 ml-auto"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setDateRange(undefined);
+                                            }}
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </Button>
+                                    </span>
+                                ) : (
+                                    "Pick a date"
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                initialFocus
+                                mode="range"
+                                defaultMonth={dateRange?.from}
+                                selected={dateRange}
+                                onSelect={setDateRange}
+                                numberOfMonths={2}
+                            />
+                            <div className="p-3 border-t border-border">
+                                <Button
+                                    variant="ghost"
+                                    className="w-full"
+                                    onClick={() => setDateRange(undefined)}
+                                >
+                                    Clear Date
+                                </Button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+            </div>
             <div className="select-none">
                 <AlertDialog open={open} onOpenChange={setOpen}>
                     <AlertDialogContent>
@@ -313,7 +411,7 @@ export const BarangayFiledComplaints: React.FC = () => {
                                 onDragStart={handleDragStart}
                                 onDragEnd={handleDragEnd}
                             >
-                                <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                                     {statusColumns.map((status) => (
                                         <DroppableColumn
                                             key={status}
@@ -378,12 +476,12 @@ export const BarangayFiledComplaints: React.FC = () => {
                                                     }
                                                     statusColor={
                                                         statusColors[
-                                                            data?.data.find(
-                                                                (c) =>
-                                                                    c.id ===
-                                                                    activeId
-                                                            )
-                                                                ?.status as ComplaintStatus
+                                                        data?.data.find(
+                                                            (c) =>
+                                                                c.id ===
+                                                                activeId
+                                                        )
+                                                            ?.status as ComplaintStatus
                                                         ]
                                                     }
                                                 />
@@ -425,22 +523,22 @@ const DroppableColumn: React.FC<DroppableColumnProps> = React.memo(
             switch (sortOrder) {
                 case "asc":
                     return (
-                        <ArrowUpIcon className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                        <ArrowUpIcon className="w-4 h-4 transition-all duration-300 text-muted-foreground hover:text-foreground" />
                     );
                 case "desc":
                     return (
-                        <ArrowDownIcon className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                        <ArrowDownIcon className="w-4 h-4 transition-all duration-300 text-muted-foreground hover:text-foreground" />
                     );
                 default:
                     return (
-                        <ArrowUpDownIcon className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                        <ArrowUpDownIcon className="w-4 h-4 transition-all duration-300 text-muted-foreground hover:text-foreground" />
                     );
             }
         };
 
         return (
             <div ref={setNodeRef} className="w-full">
-                <div className="flex flex-col h-full border rounded-lg bg-background/25 border-border/20">
+                <div className="flex flex-col h-full border rounded-lg bg-card">
                     <CardHeader>
                         <CardTitle className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -506,8 +604,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = React.memo(
                                         }}
                                         className="absolute"
                                     >
-                                        {complaintsByStatus[status]?.length ||
-                                            0}
+                                        {complaintsByStatus[status]?.length || 0}
                                     </motion.span>
                                 </AnimatePresence>
                             </Badge>

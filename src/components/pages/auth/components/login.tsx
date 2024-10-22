@@ -2,10 +2,8 @@ import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
-	CardDescription,
-	CardFooter,
 	CardHeader,
-	CardTitle,
+	CardTitle
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +17,7 @@ import {
 	useRouterType,
 	useTranslate,
 } from "@refinedev/core";
+import { motion } from "framer-motion";
 import React, { useState } from "react";
 
 type DivPropsType = React.DetailedHTMLProps<
@@ -95,125 +94,110 @@ export const LoginPage: React.FC<LoginProps> = ({
 	};
 
 	const content = (
-		<div
+		<motion.div
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1.0] }}
 			{...contentProps}
-			className="flex justify-center items-center min-h-screen"
+			className="flex items-center justify-center min-h-screen p-4"
 		>
-			<Card className="w-full max-w-sm">
-				<CardHeader>
-					<CardTitle className="text-2xl">
-						{translate("pages.login.title", "Sign in to your account")}
-					</CardTitle>
-					<CardDescription>
-						{translate(
-							"pages.login.description",
-							"Enter your email below to login to your account.",
-						)}
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="grid gap-4">
-					{renderProviders()}
-					{!hideForm && (
-						<>
-							<div className="grid gap-2">
-								<Label htmlFor="email-input">
-									{translate("pages.login.fields.email", "Email")}
-								</Label>
-								<Input
-									id="email-input"
-									name="email"
-									type="text"
-									size={20}
-									autoCorrect="off"
-									spellCheck={false}
-									autoCapitalize="off"
-									required
-									value={email}
-									onChange={(e) => setEmail(e.target.value)}
-								/>
-							</div>
-							<div className="grid gap-2">
-								<Label htmlFor="password-input">
-									{translate("pages.login.fields.password", "Password")}
-								</Label>
-								<Input
-									id="password-input"
-									type="password"
-									name="password"
-									required
-									size={20}
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
-								/>
-							</div>
-							{rememberMe ?? (
-								// biome-ignore lint/complexity/noUselessFragments: <explanation>
-								<>
-									<Label
-										htmlFor="remember-me-input"
-										className="flex items-center gap-2"
-									>
-										<Input
-											id="remember-me-input"
-											name="remember"
-											type="checkbox"
-											size={20}
-											className="w-4 h-4"
-											checked={remember}
-											value={remember.toString()}
-											onChange={() => {
-												setRemember(!remember);
-											}}
-										/>
-										{translate("pages.login.buttons.rememberMe", "Remember me")}
-									</Label>
-								</>
-							)}
-
-							<Link
-								to={"/forgot-password"}
-								className="ml-auto inline-block text-sm underline"
+			<motion.div
+				initial={{ opacity: 0, y: 20 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.4, delay: 0.2, ease: [0.25, 0.1, 0.25, 1.0] }}
+				className="w-full max-w-md"
+			>
+				<Card>
+					<CardHeader className="space-y-1">
+						<motion.div
+							initial={{ opacity: 0, y: 10 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.4, delay: 0.1, ease: [0.25, 0.1, 0.25, 1.0] }}
+						>
+							<CardTitle className="text-2xl font-bold">
+								{translate("pages.login.title", "Maayong Pagbalik!")}
+							</CardTitle>
+							<p className="text-sm text-gray-500">
+								{translate("pages.login.description", "Good to see you again!")}
+							</p>
+						</motion.div>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						{renderProviders()}
+						{!hideForm && (
+							<motion.form 
+								initial={{ opacity: 0, y: 20 }}
+								animate={{ opacity: 1, y: 0 }}
+								transition={{ duration: 0.4, delay: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
+								onSubmit={(e) => { e.preventDefault(); login({ email, password, remember }); }}
 							>
-								{forgotPasswordLink ??
-									renderLink(
-										"/forgot-password",
-										translate(
-											"pages.login.buttons.forgotPassword",
-											"Forgot password?",
-										),
-									)}
-							</Link>
-						</>
-					)}
-				</CardContent>
-				<CardFooter>
-					<Button
-						className="w-full"
-						onClick={() => login({ email, password, remember })}
-					>
-						{translate("pages.login.signin", "Sign in")}
-					</Button>
-				</CardFooter>
-				<div className="p-2 text-base">
-					{registerLink ?? (
-						<div style={{ textAlign: "center" }}>
-							{translate(
-								"pages.login.buttons.noAccount",
-								"Don’t have an account?",
-							)}{" "}
-							{renderLink(
-								"/register",
-								translate("pages.login.register", "Sign up"),
+								<div className="space-y-4">
+									<div>
+										<Label htmlFor="email-input">
+											{translate("pages.login.fields.email", "Email address")}
+										</Label>
+										<Input
+											id="email-input"
+											name="email"
+											type="email"
+											placeholder="account@jhcsc.edu.ph"
+											required
+											value={email}
+											onChange={(e) => setEmail(e.target.value)}
+											className="mt-1"
+										/>
+									</div>
+									<div>
+										<div className="flex items-center justify-between">
+											<Label htmlFor="password-input">
+												{translate("pages.login.fields.password", "Password")}
+											</Label>
+											<Link
+												to="/forgot-password"
+												className="text-sm hover:underline"
+											>
+												{translate("pages.login.buttons.forgotPassword", "Forgot password?")}
+											</Link>
+										</div>
+										<Input
+											id="password-input"
+											type="password"
+											name="password"
+											required
+											value={password}
+											onChange={(e) => setPassword(e.target.value)}
+											className="mt-1"
+										/>
+									</div>
+									<Button type="submit" className="w-full">
+										{translate("pages.login.signin", "Sign in")}
+									</Button>
+								</div>
+							</motion.form>
+						)}
+						<motion.div 
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							transition={{ duration: 0.4, delay: 0.4, ease: [0.25, 0.1, 0.25, 1.0] }}
+							className="text-sm text-center"
+						>
+							{registerLink ?? (
+								<p>
+									{translate("pages.login.buttons.noAccount", "Don't have an account?")}{" "}
+									<Link to="/register" className="hover:underline">
+										{translate("pages.login.register", "Or sign up")}
+									</Link>
+								</p>
 							)}
-						</div>
-					)}
-				</div>
-			</Card>
-		</div>
+						</motion.div>
+					</CardContent>
+				</Card>
+			</motion.div>
+		</motion.div>
 	);
 
 	return (
-		<div {...wrapperProps}>
+		<div {...wrapperProps} className="min-h-screen">
 			{renderContent ? renderContent(content, title) : content}
 		</div>
 	);
