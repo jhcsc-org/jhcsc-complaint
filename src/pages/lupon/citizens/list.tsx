@@ -252,6 +252,7 @@ export const BarangayCitizenList: React.FC = () => {
                                             {flexRender(column.cell, {
                                                 getValue: () =>
                                                     row[column.id as keyof typeof row],
+                                                // @ts-ignore
                                                 row: { original: row },
                                             })}
                                         </TableCell>

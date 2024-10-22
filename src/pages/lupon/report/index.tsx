@@ -251,6 +251,7 @@ const RenderChart: React.FC<{
       config={chartConfigs[chartType]}
       className="min-h-[300px] w-full h-full"
     >
+      {/* @ts-ignore */}
       <ResponsiveContainer width="100%" height="100%">
         {chartType === "bar" && (
           <BarChart data={data}>
