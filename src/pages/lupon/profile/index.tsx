@@ -73,7 +73,7 @@ export const UserProfileDashboard = () => {
             <Card>
                 <CardContent className="p-6 space-y-6">
                     <motion.section variants={sectionVariants}>
-                        <h3 className="mb-2 text-lg font-semibold">Citizen Profile</h3>
+                        <h3 className="mb-2 text-lg font-semibold">Lupon Profile</h3>
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <p className="text-sm font-medium text-gray-500">Name</p>

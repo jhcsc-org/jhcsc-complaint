@@ -1,118 +1,249 @@
+// Layout.tsx
+"use client";
+
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSkeleton,
+  SidebarProvider,
+} from "@/components/ui/sidebar";
 import { TableType } from "@/types/dev.types";
-import { BaseKey, useGetIdentity, useList, useLogout, useMenu, useNavigation, useOne } from "@refinedev/core";
+import {
+  BaseKey,
+  useGetIdentity,
+  useLogout,
+  useMenu,
+  useOne,
+  useSubscription,
+} from "@refinedev/core";
 import { User } from "@supabase/supabase-js";
-import { CircleDotDashedIcon } from "lucide-react";
-import { type PropsWithChildren } from "react";
-import { NavLink } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Separator } from "../ui/separator";
+import {
+  ChevronsUpDown,
+  LogOut
+} from "lucide-react";
+import React, { PropsWithChildren, useEffect, useMemo, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
-export const Layout: React.FC<PropsWithChildren> = ({ children }) => {
+const roleRoutes: Record<string, string[]> = {
+  citizen: ["/", "/create", "/updates"],
+  lupon_member: [
+    "/lupon/manage",
+    "/lupon/complaints",
+    "/lupon/complaints/show/",
+    "/lupon/citizens",
+    "/lupon/reports",
+  ],
+  admin: [
+    "/admin/manage",
+    "/admin/complaints",
+    "/admin/manage/lupons",
+    "/admin/manage/lupons/edit",
+    "/admin/manage/lupons/add",
+  ],
+};
+
+interface LayoutProps extends PropsWithChildren { }
+
+export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { mutate: logout } = useLogout();
   const { menuItems } = useMenu();
   const { data: user } = useGetIdentity<User>();
-  const { show } = useNavigation();
-  const { data: recentComplaints } = useList<TableType<"complaints">>({
-    resource: "complaints",
-    filters: [
-      {
-        field: "filed_by",
-        operator: "eq",
-        value: user?.id,
-      },
-    ],
-    pagination: {
-      pageSize: 5,
-    },
-    liveMode: "auto",
-  });
   const userId = user?.id;
-  const { data: userRole, isLoading: isUserRoleLoading } = useOne<TableType<"user_profile"> & BaseKey>({
+
+  const { data: userRole, isLoading: isUserRoleLoading } = useOne<
+    TableType<"user_profile"> & BaseKey
+  >({
     id: userId,
     resource: "user_profile",
     queryOptions: {
       enabled: !!userId,
-    }
+    },
   });
 
-  const full_name = `${user?.user_metadata.first_name} ${user?.user_metadata.middle_name ? `${user.user_metadata.middle_name} ` : ''}${user?.user_metadata.last_name}`;
+  const [role, setRole] = useState<string | undefined | null>();
+  const fullName = `${user?.user_metadata.first_name} ${user?.user_metadata.middle_name ? `${user.user_metadata.middle_name} ` : ""
+    }${user?.user_metadata.last_name}`;
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const filteredMenuItems = useMemo(() => {
+    return menuItems.filter((item) =>
+      roleRoutes[role!]?.includes(item.route || "")
+    );
+  }, [menuItems, role]);
+
+  useSubscription({
+    channel: "channel-name",
+    types: ["*"],
+    enabled: true,
+    onLiveEvent: (event) => {
+      console.log(event);
+    },
+    dataProviderName: "default",
+  });
+
+  useEffect(() => {
+    if (
+      role &&
+      role !== 'admin' &&
+      !roleRoutes[role]?.includes(location.pathname) &&
+      !location.pathname.startsWith("/lupon/show/") &&
+      !location.pathname.startsWith("/show/")
+    ) {
+      const defaultRoute = roleRoutes[role][0];
+      navigate(defaultRoute);
+    }
+  }, [role, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (userRole !== undefined) {
+      setRole(userRole.data.role_name);
+    }
+  }, [userRole?.data]);
 
   return (
-    <div className="flex min-h-screen py-4 lg:pr-4">
-      <nav className="fixed top-0 left-0 justify-between hidden w-64 h-full py-5 lg:flex lg:flex-col bg-background">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2 px-6 pt-2 pb-4">
-            <CircleDotDashedIcon className="w-6 h-6" />
-            <h1 className="text-lg font-bold">complain-ant.</h1>
-          </div>
-          <Separator />
-          <ul className="px-4 pb-4 mt-4">
-            {!isUserRoleLoading && menuItems.map((item) => {
-              if (item.label === "Manage Complaints" && (userRole?.data.role_name === 'admin' ||userRole?.data.role_name === 'lupon')) {
-                return null; 
-              }
-              return (
-                <NavLink key={item.label} className="my-6 text-sm font-medium" to={item.route ?? "/"} >
-                  <li className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted-foreground/25">
-                    {item.icon}
-                    {item.label}
-                  </li>
-                </NavLink>
-              );
-            })}
-          </ul>
-          <Separator />
-          <ul className="px-4 mt-4">
-            <h1 className="flex items-center gap-2 px-2 py-2 text-xs font-bold font-border">Recent Complaints</h1>
-            {recentComplaints?.data?.map((complaint) => (
-              <button type="button" key={complaint.id} onClick={() => show("complaints", complaint.id)}>
-                <li className="flex items-center gap-2 px-2 py-2 text-sm rounded-md hover:bg-muted-foreground/25">
-                  {complaint.case_title}
-                </li>
-              </button>
-            ))}
-          </ul>
-        </div>
-        <div className="flex flex-col items-center justify-center">
-          <Separator className="w-full -mx-10" />
-          <div className="w-full px-4 pt-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger className="w-full h-16 rounded-lg hover:bg-muted-foreground/25">
-                <div className="flex items-center gap-2 px-2 py-2">
-                  <Avatar>
-                    <AvatarImage src="https://pbs.twimg.com/media/EmiRsAVVcAAsiVm.jpg:large" />
-                    <AvatarFallback>CN</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-xs font-medium text-left">{full_name}</p>
-                    <p className="text-xs text-left text-muted-foreground">{user?.email}</p>
-                  </div>
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="start">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => logout()}>
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </nav>
-      <div className="flex-1 mx-4 border rounded-xl dark:border-border/25 border-border/50 bg-card lg:mx-0 lg:ml-64">
-        <main className="mx-auto py-14 sm:px-6 lg:px-8">
+    <SidebarProvider>
+      <Sidebar collapsible="icon">
+        {/* Sidebar Header */}
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem className="flex flex-row items-center justify-center pt-4" >
+              <div className="flex flex-row items-center justify-center">
+                <h1 className="text-lg font-bold text-center">JHCSC Barangay</h1>
+              </div>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+
+        {/* Sidebar Content */}
+        <SidebarContent>
+          {/* Navigation Group */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarMenu>
+              {!isUserRoleLoading ?
+                filteredMenuItems.map((item) => (
+                  <SidebarMenuItem key={item.label}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.route || "/"}
+                        className={({ isActive }) =>
+                          `flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted-foreground/25 ${isActive ? "bg-muted-foreground/25" : ""
+                          }`
+                        }
+                      >
+                        {item.icon}
+                        <span className="truncate">{item.label}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )) :
+                (<>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <SidebarMenuItem key={index}>
+                      <div
+                        className={
+                          `flex items-center gap-2 px-2 py-1 rounded-md bg-muted-foreground/5`
+                        }
+                      >
+                        <SidebarMenuSkeleton />
+                      </div>
+                    </SidebarMenuItem>
+                  ))}
+                </>)}
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarContent>
+
+        {/* Sidebar Footer */}
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  >
+                    <Avatar className="w-8 h-8 rounded-lg">
+                      <AvatarImage
+                        src={user?.user_metadata.avatar_url || ""}
+                        alt={fullName}
+                      />
+                      <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-sm leading-tight text-left">
+                      <span className="font-semibold truncate">
+                        {fullName}
+                      </span>
+                      <span className="text-xs truncate">
+                        {user?.email}
+                      </span>
+                    </div>
+                    <ChevronsUpDown className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  side="bottom"
+                  align="end"
+                  sideOffset={4}
+                >
+                  <DropdownMenuLabel className="p-0 font-normal">
+                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                      <Avatar className="w-8 h-8 rounded-lg">
+                        <AvatarImage
+                          src={user?.user_metadata.avatar_url || ""}
+                        />
+                        <AvatarFallback className="rounded-lg">
+                          CN
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="grid flex-1 text-sm leading-tight text-left">
+                        <span className="font-semibold truncate">
+                          {fullName}
+                        </span>
+                        <span className="text-xs truncate">
+                          {user?.email}
+                        </span>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => logout()}>
+                    <LogOut className="mr-4 size-5" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+      <div className="flex-1">
+        <main className="px-6 py-8 mx-auto">
           {children}
         </main>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };

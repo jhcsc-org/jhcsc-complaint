@@ -26,6 +26,7 @@ import { debounce } from 'lodash';
 import { AlertCircle, Briefcase, ChevronFirstIcon, ChevronLastIcon, ChevronLeftIcon, ChevronRightIcon, DollarSign, Gavel, HashIcon, Home, MoreVerticalIcon, UserIcon } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useVirtual } from "react-virtual";
+import { UserProfileDashboard } from "./profile";
 
 const complaintTypeIcons = {
     "Civil Disputes Between Neighbors and Family Members": <UserIcon className="w-10 h-10" />,
@@ -149,19 +150,10 @@ const ComplaintRow: React.FC<ComplaintRowProps> = React.memo(({ row, complaintTy
                                         type="button"
                                         className="py-1.5 px-2 rounded-sm text-left text-sm hover:bg-muted-foreground/25"
                                         onClick={() => {
-                                            show("complaints", row.original.id);
+                                            show("lupon_complaints", row.original.id);
                                         }}
                                     >
                                         View
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="py-1.5 px-2 rounded-sm text-left text-sm hover:bg-muted-foreground/25"
-                                        onClick={() => {
-                                            edit("complaints", row.original.id);
-                                        }}
-                                    >
-                                        Edit
                                     </button>
                                 </div>
                             </PopoverContent>
@@ -386,7 +378,8 @@ export const LuponComplainList = () => {
     };
 
     return (
-        <div className="max-w-4xl p-4 mx-auto">
+        <div className="mx-auto">
+            <UserProfileDashboard/>
             <motion.div
                 initial="hidden"
                 animate="visible"

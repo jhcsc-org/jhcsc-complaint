@@ -26,7 +26,7 @@ import { debounce } from 'lodash';
 import { AlertCircle, Briefcase, ChevronFirstIcon, ChevronLastIcon, ChevronLeftIcon, ChevronRightIcon, DollarSign, Gavel, HashIcon, Home, MoreVerticalIcon, UserIcon } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useVirtual } from "react-virtual";
-import { UserProfileDashboard } from "../profile.tsx";
+import { UserProfileDashboard } from "../profile.tsx/index.js";
 
 const complaintTypeIcons = {
     "Civil Disputes Between Neighbors and Family Members": <UserIcon className="w-10 h-10" />,
@@ -91,12 +91,13 @@ interface ComplaintRowProps {
 const ComplaintRow: React.FC<ComplaintRowProps> = React.memo(({ row, complaintType, show, edit }) => {
     return (
         <motion.div
-            className="flex flex-row items-center justify-between gap-6 p-6 border-b border-x-none"
+            className="flex flex-row items-center justify-between gap-6 p-6 border-b cursor-pointer border-x-none hover:bg-muted-foreground/5"
             layout
             variants={rowVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
+            onClick={() => show("complaints", row.original.id)}
         >
             <div className="flex flex-row items-center justify-start gap-6">
                 <div className="flex items-center justify-center w-16 h-16 rounded-lg bg-muted-foreground/5">
@@ -105,7 +106,6 @@ const ComplaintRow: React.FC<ComplaintRowProps> = React.memo(({ row, complaintTy
                 <div className="flex flex-col items-start justify-between space-y-2">
                     <h1 className="text-sm font-medium">{row.original.case_title}</h1>
                     <p className="text-xs font-medium">{complaintType}</p>
-                    <p className="text-xs ">{row.original.description}</p>
                 </div>
             </div>
             <div className="flex items-center gap-4">
@@ -155,15 +155,6 @@ const ComplaintRow: React.FC<ComplaintRowProps> = React.memo(({ row, complaintTy
                                     >
                                         View
                                     </button>
-                                    <button
-                                        type="button"
-                                        className="py-1.5 px-2 rounded-sm text-left text-sm hover:bg-muted-foreground/25"
-                                        onClick={() => {
-                                            edit("complaints", row.original.id);
-                                        }}
-                                    >
-                                        Edit
-                                    </button>
                                 </div>
                             </PopoverContent>
                         </motion.div>
@@ -200,19 +191,13 @@ export const ComplainList = () => {
                 },
             },
             {
-                id: "description",
-                accessorKey: "description",
-                header: "Description",
-                meta: {
-                    filterOperator: "contains",
-                },
-            },
-            {
                 id: "status",
                 accessorKey: "status",
                 header: "Status",
                 cell: function render({ getValue }) {
-                    return <Badge variant="outline">{getValue<string>().charAt(0).toUpperCase() + getValue<string>().slice(1).toLowerCase()}</Badge>
+                    return <div className="w-64">
+                        <Badge variant="outline">{getValue<string>().charAt(0).toUpperCase() + getValue<string>().slice(1).toLowerCase()}</Badge>
+                    </div>
                 },
             },
             {
@@ -384,8 +369,8 @@ export const ComplainList = () => {
     };
 
     return (
-        <div className="max-w-4xl p-4 mx-auto">
-            <UserProfileDashboard/>
+        <div className="mx-auto">
+            <UserProfileDashboard />
             <motion.div
                 initial="hidden"
                 animate="visible"
