@@ -965,3 +965,94 @@ This document has been updated to reflect the implemented views in the complaint
 - **Purpose**: To customize the system's behavior and ensure it aligns with administrative policies and procedures.
 
 ---
+
+```mermaid
+erDiagram
+    COMPLAINT_TYPES {
+        uuid complaint_type_id PK
+        text description UNIQUE
+    }
+    PROVINCES {
+        bigint province_id PK
+        text name UNIQUE
+    }
+    MUNICIPALITIES {
+        bigint municipality_id PK
+        text name UNIQUE
+        bigint province_id FK
+    }
+    BARANGAYS {
+        uuid id PK
+        text name
+        bigint municipality_id FK
+    }
+    USERS {
+        uuid user_id PK
+        text first_name
+        text middle_name
+        text last_name
+        text address
+        bigint role_id FK
+        uuid barangay_id FK
+    }
+    COMPLAINTS {
+        uuid id PK
+        text case_number UNIQUE
+        text description
+        uuid barangay_id FK
+        uuid complaint_type_id FK
+        complaint_status status
+        timestamp date_filed
+        timestamp resolution_date
+        text case_title
+    }
+    COMPLAINT_PARTICIPANTS {
+        uuid participant_id PK
+        uuid complaint_id FK
+        uuid person_id FK
+        text role CHECK
+    }
+    COMPLAINT_DOCUMENTS {
+        uuid document_id PK
+        uuid complaint_id FK
+        text file_name
+        text file_path
+    }
+    COMPLAINT_HISTORY {
+        uuid history_id PK
+        uuid complaint_id FK
+        text action_taken
+        uuid action_by FK
+    }
+    LUPON_MEMBERS {
+        uuid lupon_member_id PK
+        uuid user_id FK
+        uuid barangay_id FK
+        text position
+    }
+    PEOPLE {
+        uuid person_id PK
+        text first_name
+        text last_name
+        text address
+    }
+    USER_ROLES {
+        bigint role_id PK
+        text role_name UNIQUE
+    }
+
+    PROVINCES ||--o{ MUNICIPALITIES : has
+    MUNICIPALITIES ||--o{ BARANGAYS : has
+    USERS ||--o{ LUPON_MEMBERS : "can belong to"
+    USERS ||--o{ COMPLAINTS : files
+    USERS ||--o{ COMPLAINT_PARTICIPANTS : "is a"
+    USERS ||--o{ COMPLAINT_HISTORY : "can act"
+    COMPLAINTS ||--o{ COMPLAINT_PARTICIPANTS : involves
+    COMPLAINTS ||--o{ COMPLAINT_DOCUMENTS : has
+    COMPLAINTS ||--o{ COMPLAINT_HISTORY : logged
+    COMPLAINTS ||--|{ BARANGAYS : located_in
+    COMPLAINTS ||--|{ COMPLAINT_TYPES : is_of_type
+    LUPON_MEMBERS ||--|{ BARANGAYS : "assigned to"
+    USER_ROLES ||--|{ USERS : "has role"
+    COMPLAINT_PARTICIPANTS ||--|{ PEOPLE : identifies
+```
