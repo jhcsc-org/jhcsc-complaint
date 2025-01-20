@@ -1,5 +1,300 @@
 # Barangay Complaint Tracking System
 
+```mermaid
+classDiagram
+direction BT
+class admin_dashboard_view {
+   bigint total_users
+   bigint total_admins
+   bigint total_lupon_members
+   bigint total_citizens
+   json user_growth_trends_last_12_months
+   bigint total_complaints
+   bigint pending_complaints
+   bigint in_process_complaints
+   bigint resolved_complaints
+   bigint dismissed_complaints
+   json complaint_trends_last_12_months
+   numeric avg_resolution_time_days
+   numeric sla_compliance_percentage
+   json complaints_by_barangay
+   json complaints_by_type
+   json recent_complaints
+   json users_by_province
+   json active_users
+}
+class admin_report_view {
+   uuid complaint_id
+   text case_number
+   text case_title
+   text complaint_description
+   complaint_status status
+   timestamp with time zone date_filed
+   timestamp with time zone resolution_date
+   timestamp with time zone created_at
+   timestamp with time zone updated_at
+   text complaint_type
+   text barangay_name
+   text municipality_name
+   text filed_by
+   json participants
+   json documents
+   json history
+}
+class barangays {
+   text name
+   bigint municipality_id
+   uuid id
+}
+class citizen_dashboard_view {
+   uuid user_id
+   text first_name
+   text last_name
+   bigint total_complaints
+   bigint pending_complaints
+   bigint in_process_complaints
+   bigint resolved_complaints
+   bigint dismissed_complaints
+   numeric avg_resolution_time_days
+   json top_complaint_types
+   json complaint_trends_last_12_months
+   json recent_complaints
+}
+class node11 {
+   uuid complaint_id
+   text file_name
+   text file_path
+   timestamp with time zone uploaded_at
+   uuid uploaded_by
+   timestamp with time zone created_at
+   uuid document_id
+}
+class node3 {
+   uuid complaint_id
+   text action_taken
+   uuid action_by
+   timestamp with time zone action_date
+   timestamp with time zone created_at
+   uuid history_id
+}
+class node18 {
+   uuid complaint_id
+   uuid added_by
+   uuid person_id
+   text role
+   timestamp with time zone created_at
+   timestamp with time zone updated_at
+   uuid participant_id
+}
+class complaint_types {
+   text description
+   uuid complaint_type_id
+}
+class complaint_view {
+   uuid complaint_id
+   text case_number
+   text complaint_description
+   complaint_status status
+   timestamp with time zone date_filed
+   timestamp with time zone resolution_date
+   text case_title
+   text barangay_name
+   text complaint_type
+   json participants
+   json history
+   json documents
+}
+class node24 {
+   text case_number
+   uuid barangay_id
+   text description
+   complaint_status status
+   timestamp with time zone date_filed
+   timestamp with time zone resolution_date
+   timestamp with time zone created_at
+   timestamp with time zone updated_at
+   text case_title
+   uuid complaint_type_id
+   uuid filed_by
+   uuid id
+}
+class lupon_member_dashboard_view {
+   uuid lupon_member_id
+   text first_name
+   text last_name
+   text barangay_name
+   bigint total_complaints
+   bigint pending_complaints
+   bigint in_process_complaints
+   bigint resolved_complaints
+   bigint dismissed_complaints
+   numeric avg_resolution_time_days
+   json complaint_trends_last_12_months
+   json top_complaint_types
+   json recent_complaints
+   json participants_in_recent_complaints
+}
+class node2 {
+   uuid user_id
+   uuid barangay_id
+   text position
+   timestamp with time zone created_at
+   timestamp with time zone updated_at
+   uuid lupon_member_id
+}
+class lupon_report_view {
+   uuid complaint_id
+   text case_number
+   text case_title
+   text complaint_description
+   complaint_status status
+   timestamp with time zone date_filed
+   timestamp with time zone resolution_date
+   timestamp with time zone created_at
+   timestamp with time zone updated_at
+   text complaint_type
+   text barangay_name
+   text filed_by
+   json participants
+   json documents
+   json history
+}
+class municipalities {
+   text name
+   bigint province_id
+   bigint municipality_id
+}
+class node22 {
+   text first_name
+   text last_name
+   text address
+   text contact_info
+   timestamp with time zone created_at
+   timestamp with time zone updated_at
+   uuid person_id
+}
+class provinces {
+   text name
+   bigint province_id
+}
+class report_lupon_complaint_summary {
+   uuid lupon_member_id
+   text first_name
+   text last_name
+   text barangay_name
+   bigint total_complaints
+   bigint pending_complaints
+   bigint in_process_complaints
+   bigint resolved_complaints
+   bigint dismissed_complaints
+   numeric avg_resolution_time_days
+   json complaint_trends_last_12_months
+   json top_complaint_types
+}
+class report_lupon_complaint_trends {
+   text month
+   bigint complaint_count
+}
+class report_lupon_documentation {
+   uuid complaint_id
+   uuid document_id
+   text file_name
+   text file_path
+   timestamp with time zone uploaded_at
+   uuid uploaded_by
+}
+class report_lupon_member_activity {
+   uuid lupon_member_id
+   text first_name
+   text last_name
+   bigint complaints_handled
+   bigint resolved_complaints
+   numeric avg_resolution_time_days
+}
+class report_lupon_member_complaints {
+   uuid complaint_id
+   text case_number
+   text case_title
+   text complaint_description
+   complaint_status status
+   timestamp with time zone date_filed
+   timestamp with time zone resolution_date
+   timestamp with time zone created_at
+   timestamp with time zone updated_at
+   text complaint_type
+   text barangay_name
+   text filed_by
+   json participants
+   json documents
+   json history
+}
+class report_lupon_participant_details {
+   uuid complaint_id
+   uuid participant_id
+   text participant_name
+   text role
+   text contact_info
+}
+class report_lupon_resolution_times {
+   uuid complaint_id
+   text case_number
+   text case_title
+   timestamp with time zone date_filed
+   timestamp with time zone resolution_date
+   numeric resolution_time_days
+}
+class user_profile {
+   uuid user_id
+   text first_name
+   text middle_name
+   text last_name
+   text address
+   varchar(255) email
+   text barangay_name
+   text municipality_name
+   text province_name
+   text role_name
+   timestamp with time zone created_at
+   timestamp with time zone updated_at
+}
+class user_roles {
+   text role_name
+   bigint role_id
+}
+class users {
+   text first_name
+   bigint role_id
+   timestamp with time zone created_at
+   timestamp with time zone updated_at
+   uuid barangay_id
+   text address
+   text middle_name
+   text last_name
+   uuid user_id
+}
+
+admin_report_view  -->  node24 : complaint_id
+barangays  -->  municipalities : municipality_id
+node11  -->  node24 : complaint_id
+node3  -->  node24 : complaint_id
+node18  -->  node24 : complaint_id
+node18  -->  node22 : person_id
+complaint_view  -->  node24 : complaint_id
+node24  -->  barangays : barangay_id
+node24  -->  complaint_types : complaint_type_id
+node2  -->  barangays : barangay_id
+node2  -->  users : user_id
+lupon_report_view  -->  node24 : complaint_id
+municipalities  -->  provinces : province_id
+report_lupon_documentation  -->  node24 : complaint_id
+report_lupon_member_complaints  -->  node24 : complaint_id
+report_lupon_participant_details  -->  node24 : complaint_id
+report_lupon_resolution_times  -->  node24 : complaint_id
+users  -->  barangays : barangay_id
+users  -->  user_roles : role_id
+```
+
+
 ## 1. **Introduction**
 ### 1.1 Project Overview
 - **Project Name**: Complain-Ant (Barangay Complaint Tracking System)
@@ -965,297 +1260,3 @@ This document has been updated to reflect the implemented views in the complaint
 - **Purpose**: To customize the system's behavior and ensure it aligns with administrative policies and procedures.
 
 ---
-
-```mermaid
-classDiagram
-direction BT
-class admin_dashboard_view {
-   bigint total_users
-   bigint total_admins
-   bigint total_lupon_members
-   bigint total_citizens
-   json user_growth_trends_last_12_months
-   bigint total_complaints
-   bigint pending_complaints
-   bigint in_process_complaints
-   bigint resolved_complaints
-   bigint dismissed_complaints
-   json complaint_trends_last_12_months
-   numeric avg_resolution_time_days
-   numeric sla_compliance_percentage
-   json complaints_by_barangay
-   json complaints_by_type
-   json recent_complaints
-   json users_by_province
-   json active_users
-}
-class admin_report_view {
-   uuid complaint_id
-   text case_number
-   text case_title
-   text complaint_description
-   complaint_status status
-   timestamp with time zone date_filed
-   timestamp with time zone resolution_date
-   timestamp with time zone created_at
-   timestamp with time zone updated_at
-   text complaint_type
-   text barangay_name
-   text municipality_name
-   text filed_by
-   json participants
-   json documents
-   json history
-}
-class barangays {
-   text name
-   bigint municipality_id
-   uuid id
-}
-class citizen_dashboard_view {
-   uuid user_id
-   text first_name
-   text last_name
-   bigint total_complaints
-   bigint pending_complaints
-   bigint in_process_complaints
-   bigint resolved_complaints
-   bigint dismissed_complaints
-   numeric avg_resolution_time_days
-   json top_complaint_types
-   json complaint_trends_last_12_months
-   json recent_complaints
-}
-class node11 {
-   uuid complaint_id
-   text file_name
-   text file_path
-   timestamp with time zone uploaded_at
-   uuid uploaded_by
-   timestamp with time zone created_at
-   uuid document_id
-}
-class node3 {
-   uuid complaint_id
-   text action_taken
-   uuid action_by
-   timestamp with time zone action_date
-   timestamp with time zone created_at
-   uuid history_id
-}
-class node18 {
-   uuid complaint_id
-   uuid added_by
-   uuid person_id
-   text role
-   timestamp with time zone created_at
-   timestamp with time zone updated_at
-   uuid participant_id
-}
-class complaint_types {
-   text description
-   uuid complaint_type_id
-}
-class complaint_view {
-   uuid complaint_id
-   text case_number
-   text complaint_description
-   complaint_status status
-   timestamp with time zone date_filed
-   timestamp with time zone resolution_date
-   text case_title
-   text barangay_name
-   text complaint_type
-   json participants
-   json history
-   json documents
-}
-class node24 {
-   text case_number
-   uuid barangay_id
-   text description
-   complaint_status status
-   timestamp with time zone date_filed
-   timestamp with time zone resolution_date
-   timestamp with time zone created_at
-   timestamp with time zone updated_at
-   text case_title
-   uuid complaint_type_id
-   uuid filed_by
-   uuid id
-}
-class lupon_member_dashboard_view {
-   uuid lupon_member_id
-   text first_name
-   text last_name
-   text barangay_name
-   bigint total_complaints
-   bigint pending_complaints
-   bigint in_process_complaints
-   bigint resolved_complaints
-   bigint dismissed_complaints
-   numeric avg_resolution_time_days
-   json complaint_trends_last_12_months
-   json top_complaint_types
-   json recent_complaints
-   json participants_in_recent_complaints
-}
-class node2 {
-   uuid user_id
-   uuid barangay_id
-   text position
-   timestamp with time zone created_at
-   timestamp with time zone updated_at
-   uuid lupon_member_id
-}
-class lupon_report_view {
-   uuid complaint_id
-   text case_number
-   text case_title
-   text complaint_description
-   complaint_status status
-   timestamp with time zone date_filed
-   timestamp with time zone resolution_date
-   timestamp with time zone created_at
-   timestamp with time zone updated_at
-   text complaint_type
-   text barangay_name
-   text filed_by
-   json participants
-   json documents
-   json history
-}
-class municipalities {
-   text name
-   bigint province_id
-   bigint municipality_id
-}
-class node22 {
-   text first_name
-   text last_name
-   text address
-   text contact_info
-   timestamp with time zone created_at
-   timestamp with time zone updated_at
-   uuid person_id
-}
-class provinces {
-   text name
-   bigint province_id
-}
-class report_lupon_complaint_summary {
-   uuid lupon_member_id
-   text first_name
-   text last_name
-   text barangay_name
-   bigint total_complaints
-   bigint pending_complaints
-   bigint in_process_complaints
-   bigint resolved_complaints
-   bigint dismissed_complaints
-   numeric avg_resolution_time_days
-   json complaint_trends_last_12_months
-   json top_complaint_types
-}
-class report_lupon_complaint_trends {
-   text month
-   bigint complaint_count
-}
-class report_lupon_documentation {
-   uuid complaint_id
-   uuid document_id
-   text file_name
-   text file_path
-   timestamp with time zone uploaded_at
-   uuid uploaded_by
-}
-class report_lupon_member_activity {
-   uuid lupon_member_id
-   text first_name
-   text last_name
-   bigint complaints_handled
-   bigint resolved_complaints
-   numeric avg_resolution_time_days
-}
-class report_lupon_member_complaints {
-   uuid complaint_id
-   text case_number
-   text case_title
-   text complaint_description
-   complaint_status status
-   timestamp with time zone date_filed
-   timestamp with time zone resolution_date
-   timestamp with time zone created_at
-   timestamp with time zone updated_at
-   text complaint_type
-   text barangay_name
-   text filed_by
-   json participants
-   json documents
-   json history
-}
-class report_lupon_participant_details {
-   uuid complaint_id
-   uuid participant_id
-   text participant_name
-   text role
-   text contact_info
-}
-class report_lupon_resolution_times {
-   uuid complaint_id
-   text case_number
-   text case_title
-   timestamp with time zone date_filed
-   timestamp with time zone resolution_date
-   numeric resolution_time_days
-}
-class user_profile {
-   uuid user_id
-   text first_name
-   text middle_name
-   text last_name
-   text address
-   varchar(255) email
-   text barangay_name
-   text municipality_name
-   text province_name
-   text role_name
-   timestamp with time zone created_at
-   timestamp with time zone updated_at
-}
-class user_roles {
-   text role_name
-   bigint role_id
-}
-class users {
-   text first_name
-   bigint role_id
-   timestamp with time zone created_at
-   timestamp with time zone updated_at
-   uuid barangay_id
-   text address
-   text middle_name
-   text last_name
-   uuid user_id
-}
-
-admin_report_view  -->  node24 : complaint_id
-barangays  -->  municipalities : municipality_id
-node11  -->  node24 : complaint_id
-node3  -->  node24 : complaint_id
-node18  -->  node24 : complaint_id
-node18  -->  node22 : person_id
-complaint_view  -->  node24 : complaint_id
-node24  -->  barangays : barangay_id
-node24  -->  complaint_types : complaint_type_id
-node2  -->  barangays : barangay_id
-node2  -->  users : user_id
-lupon_report_view  -->  node24 : complaint_id
-municipalities  -->  provinces : province_id
-report_lupon_documentation  -->  node24 : complaint_id
-report_lupon_member_complaints  -->  node24 : complaint_id
-report_lupon_participant_details  -->  node24 : complaint_id
-report_lupon_resolution_times  -->  node24 : complaint_id
-users  -->  barangays : barangay_id
-users  -->  user_roles : role_id
-```
