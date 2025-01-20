@@ -1,3 +1,417 @@
+# Barangay Complaint Tracking System
+
+## 1. **Introduction**
+### 1.1 Project Overview
+- **Project Name**: Complain-Ant (Barangay Complaint Tracking System)
+- **Target Audience**: 
+  - Citizens filing complaints
+  - Lupon Members (complaint handlers)
+  - System Administrators
+- **Scope**: 
+  - Complaint management system
+  - User authentication and authorization
+  - Document management
+  - Status tracking and history
+  - Reporting and analytics
+
+### 1.2 Objectives
+- **Primary Goals**:
+  - Streamline the complaint filing process
+  - Provide transparent tracking of complaint status
+  - Enable efficient complaint management by lupon members
+  - Maintain secure and organized documentation
+  - Generate insights through reporting
+
+### 1.3 Stakeholders
+- Citizens (Complainants and Respondents)
+- Lupon Members
+- Barangay Officials
+- System Administrators
+- Development Team
+
+## 2. **System Architecture**
+
+### 2.1 High-Level Architecture
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        UI[User Interface]
+        RC[React Components]
+        RM[Route Management]
+    end
+    
+    subgraph "State Management"
+        RHF[React Hook Form]
+        QM[Query Management]
+    end
+    
+    subgraph "API Layer"
+        API[API Client]
+        AUTH[Authentication]
+    end
+    
+    subgraph "Backend Services"
+        SUP[Supabase]
+        DB[(Database)]
+        Storage[File Storage]
+    end
+    
+    UI --> RC
+    RC --> RM
+    RC --> RHF
+    RC --> QM
+    RHF --> API
+    QM --> API
+    API --> AUTH
+    AUTH --> SUP
+    SUP --> DB
+    SUP --> Storage
+```
+
+### 2.2 Logical Architecture
+- **Presentation Layer**:
+  - React Components (UI/UX)
+  - Shadcn/UI Components
+  - Motion Components
+  - Form Components
+
+- **Application Layer**:
+  - Route Management
+  - State Management
+  - Form Handling
+  - Data Validation
+
+- **Service Layer**:
+  - API Integration
+  - Authentication
+  - File Management
+  - Data Transformation
+
+### 2.3 Physical Architecture
+```mermaid
+graph TB
+    subgraph "Client"
+        Browser[Web Browser]
+    end
+    
+    subgraph "Frontend Server"
+        Vite[Vite Dev Server]
+        Static[Static Assets]
+    end
+    
+    subgraph "Supabase Platform"
+        Auth[Authentication]
+        DB[(PostgreSQL)]
+        Storage[File Storage]
+        Functions[Edge Functions]
+    end
+    
+    Browser --> Vite
+    Vite --> Static
+    Browser --> Auth
+    Auth --> DB
+    Browser --> Storage
+    Browser --> Functions
+```
+
+## 3. **System Design**
+
+### 3.1 Functional Design
+- **Modules**:
+  - Authentication Module
+  - Complaint Management Module
+  - Document Management Module
+  - User Management Module
+  - Reporting Module
+
+- **Features**: [Detailed in FEATURES.md]
+  - User Registration and Authentication
+  - Profile Management
+  - Complaint Filing and Tracking
+  - Document Upload and Management
+  - Status Updates and History
+  - Administrative Controls
+
+### 3.2 Non-Functional Requirements
+- **Performance**:
+  - Page load time < 2 seconds
+  - API response time < 500ms
+  - Smooth animations (60fps)
+
+- **Security**:
+  - Role-based access control
+  - Secure file uploads
+  - Data encryption
+  - Session management
+
+- **Usability**:
+  - Responsive design
+  - Accessible UI components
+  - Intuitive navigation
+  - Form validation feedback
+
+### 3.3 Data Flow
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI
+    participant FormHandler
+    participant APIClient
+    participant Supabase
+    participant Storage
+
+    User->>UI: Interacts with form
+    UI->>FormHandler: Validates input
+    FormHandler->>APIClient: Submits data
+    APIClient->>Supabase: API request
+    Supabase->>Storage: Store files
+    Supabase-->>APIClient: Response
+    APIClient-->>UI: Update state
+    UI-->>User: Show feedback
+```
+
+### 3.4 API Design
+- **Authentication Endpoints**:
+```typescript
+interface AuthEndpoints {
+  login: POST /auth/login
+  register: POST /auth/register
+  logout: POST /auth/logout
+  refreshToken: POST /auth/refresh
+}
+```
+
+- **Complaint Endpoints**:
+```typescript
+interface ComplaintEndpoints {
+  create: POST /complaints
+  update: PUT /complaints/:id
+  delete: DELETE /complaints/:id
+  getList: GET /complaints
+  getOne: GET /complaints/:id
+  uploadDocument: POST /complaints/:id/documents
+  updateStatus: PUT /complaints/:id/status
+  addHistory: POST /complaints/:id/history
+}
+```
+
+- **Error Handling**:
+```typescript
+interface APIError {
+  status: number;
+  message: string;
+  details?: Record<string, unknown>;
+}
+```
+
+### 3.5 Database Design
+[Schema details from README.md included here]
+
+## 4. **Technologies and Dependencies**
+
+### 4.1 Programming Languages and Frameworks
+- **TypeScript**: v5.4.2
+  - Strong typing
+  - Enhanced IDE support
+  - Better code maintainability
+
+- **React**: v18.0.0
+  - Component-based architecture
+  - Virtual DOM
+  - Hooks-based state management
+
+- **Vite**: v4.3.1
+  - Fast development server
+  - Efficient build process
+  - Modern module system
+
+### 4.2 Tools and Libraries
+- **UI Components**:
+  ```json
+  {
+    "@radix-ui/react-*": "^1.x",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.2"
+  }
+  ```
+
+- **Form Handling**:
+  ```json
+  {
+    "@hookform/resolvers": "^3.9.0",
+    "react-hook-form": "^7.53.0",
+    "zod": "^3.23.8"
+  }
+  ```
+
+- **Data Management**:
+  ```json
+  {
+    "@refinedev/core": "^4.47.1",
+    "@refinedev/supabase": "^5.7.4",
+    "@supabase/supabase-js": "^2.45.4"
+  }
+  ```
+
+### 4.3 Infrastructure
+- **Hosting Environment**: 
+  - Development: Vite Dev Server
+  - Production: Docker container with Node.js
+
+- **Database**: 
+  - Supabase PostgreSQL
+
+- **File Storage**:
+  - Supabase Storage
+
+### 4.4 Third-Party Services
+- **Supabase**:
+  - Authentication
+  - Database
+  - Storage
+  - Real-time subscriptions
+
+- **Development Tools**:
+  ```json
+  {
+    "@biomejs/biome": "1.9.2",
+    "typescript": "^5.4.2",
+    "tailwindcss": "^3.4.13"
+  }
+  ```
+
+## 5. **Implementation Guidelines**
+
+### 5.1 Coding Standards
+- **Component Structure**:
+```typescript
+// Component naming
+interface ComponentNameProps {
+  // Props interface
+}
+
+export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
+  // Implementation
+}
+```
+
+- **Styling**:
+```typescript
+// Utility function for class names
+import { cn } from "@/lib/utils"
+
+const className = cn(
+  "base-styles",
+  conditional && "conditional-styles",
+  props.className
+)
+```
+
+### 5.2 Version Control
+- **Branch Strategy**:
+  - `main`: Production-ready code
+  - `develop`: Integration branch
+  - `feature/*`: New features
+  - `bugfix/*`: Bug fixes
+  - `release/*`: Release preparation
+
+### 5.3 Testing Strategy
+- **Unit Tests**:
+  - Component testing
+  - Utility function testing
+  - Form validation testing
+
+- **Integration Tests**:
+  - API integration testing
+  - Authentication flow testing
+  - Form submission testing
+
+### 5.4 Deployment Guidelines
+```dockerfile
+# Production deployment
+FROM refinedev/node:18 AS base
+# ... [Dockerfile contents as shown in codebase]
+```
+
+## 6. **Operational Guidelines**
+
+### 6.1 Monitoring and Logging
+- **Client-side Error Tracking**:
+```typescript
+window.onerror = (message, source, lineno, colno, error) => {
+  // Log to monitoring service
+}
+```
+
+### 6.2 Backup and Recovery
+- **Data Backup**:
+  - Supabase automated backups
+  - Document storage redundancy
+  - Version control for code
+
+### 6.3 Maintenance Plan
+- Weekly dependency updates
+- Monthly security audits
+- Quarterly performance reviews
+
+## 7. **Security Guidelines**
+
+### 7.1 Data Security
+```typescript
+// Example of secure data handling
+const secureDataTransform = (data: SensitiveData): SafeData => {
+  // Remove sensitive fields
+  const { password, ...safeData } = data;
+  return safeData;
+}
+```
+
+### 7.2 Application Security
+- **Authentication Flow**:
+```mermaid
+sequenceDiagram
+    participant User
+    participant App
+    participant Supabase
+    
+    User->>App: Login Request
+    App->>Supabase: Authenticate
+    Supabase-->>App: JWT Token
+    App->>App: Store Token
+    App-->>User: Success Response
+```
+
+### 7.3 Access Control
+```typescript
+// Role-based access control
+const roles = {
+  ADMIN: 'admin',
+  LUPON: 'lupon_member',
+  CITIZEN: 'citizen'
+} as const;
+
+type Role = typeof roles[keyof typeof roles];
+
+interface AccessControl {
+  role: Role;
+  permissions: string[];
+}
+```
+
+## 8. **Appendices**
+
+### 8.1 Glossary
+- **Lupon**: Barangay justice system member
+- **Complainant**: Person filing the complaint
+- **Respondent**: Person against whom the complaint is filed
+
+### 8.2 References
+- React Documentation
+- Supabase Documentation
+- Vite Documentation
+- TailwindCSS Documentation
+
 Every table here plays a specific role, and they all link together in practical ways to make complaint management as smooth as possible. **Citizens** file complaints, **lupon members** work on them, and **admins** keep everything organized. The `complaints` table is central, but it’s everything around it—the documents, the history, the participants—that paints the full picture for resolving issues efficiently.
 
 ### 1. Table Descriptions and Purposes
@@ -551,16 +965,3 @@ This document has been updated to reflect the implemented views in the complaint
 - **Purpose**: To customize the system's behavior and ensure it aligns with administrative policies and procedures.
 
 ---
-
-# Summary
-
-This revised guideline integrates the implemented views into the feature list for each user type, ensuring consistency between the system's documentation and its underlying architecture.
-
-- **Citizens** can register, manage their profiles (supported by `vw_citizen_profile`), file complaints (selecting barangays via `vw_citizen_barangays`), upload and view documents (`vw_citizen_complaint_documents`), and track the status (`vw_citizen_complaints`) and history (`vw_citizen_complaint_history`) of their complaints.
-
-- **Lupon Members** can log in, view and manage complaints in their barangay (`vw_lupon_complaints`), update statuses, document actions (`vw_lupon_complaint_history`), manage documents (`vw_lupon_complaint_documents`), and view participants involved in complaints (`vw_lupon_complaint_participants`).
-
-- **Admins** have comprehensive control over the system, including user management (`vw_admin_users`), lupon member oversight (`vw_admin_lupon_members`), location data management (`vw_admin_barangays`, `vw_admin_municipalities`, `vw_admin_provinces`), complaint administration (`vw_admin_complaints`), role and permission settings (`vw_admin_user_roles`), access to reports (`vw_admin_complaint_statistics`), and system configurations.
-
-Each feature is designed to facilitate transparent, efficient, and effective complaint management, ensuring that issues are addressed promptly and fairly.
-
